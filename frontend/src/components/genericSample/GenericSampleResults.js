@@ -449,7 +449,8 @@ function GenericSampleResults({
           );
         }
       },
-      width: "10rem",
+      width: "20rem",
+      wrap: true,
     });
 
     // Current Result column
@@ -469,11 +470,21 @@ function GenericSampleResults({
             const dictItem = row.dictionaryResults.find(
               (dict) => dict.id === row.resultValue,
             );
-            return dictItem ? dictItem.value : row.resultValue;
+            const displayValue = dictItem ? dictItem.value : row.resultValue;
+            return (
+              <div style={{ whiteSpace: "normal", wordWrap: "break-word" }}>
+                {displayValue}
+              </div>
+            );
           }
-          return row.resultValue || "";
+          return (
+            <div style={{ whiteSpace: "normal", wordWrap: "break-word" }}>
+              {row.resultValue || ""}
+            </div>
+          );
         },
-        width: "8rem",
+        width: "20rem",
+        wrap: true,
       });
     }
 
@@ -594,6 +605,19 @@ function GenericSampleResults({
                     }
                     columns={columns}
                     isSortable
+                    customStyles={{
+                      cells: {
+                        style: {
+                          whiteSpace: "normal",
+                          wordWrap: "break-word",
+                        },
+                      },
+                      table: {
+                        style: {
+                          tableLayout: "auto",
+                        },
+                      },
+                    }}
                   />
                   {showPagination && (
                     <Pagination

@@ -967,7 +967,8 @@ export function SearchResults(props) {
       cell: (row, index, column, id) => {
         return renderCell(row, index, column, id);
       },
-      width: "12rem",
+      width: "20rem",
+      wrap: true,
     },
     {
       id: "currentResult",
@@ -975,7 +976,8 @@ export function SearchResults(props) {
       cell: (row, index, column, id) => {
         return renderCell(row, index, column, id);
       },
-      width: "10rem",
+      width: "20rem",
+      wrap: true,
     },
     {
       id: "notes",
@@ -1255,18 +1257,21 @@ export function SearchResults(props) {
           case "M":
           case "C":
           case "D":
+            const dictValue = row.dictionaryResults.find(
+              (result) => result.id == row.shadowResultValue,
+            )?.value;
             return (
-              <>
-                {
-                  row.dictionaryResults.find(
-                    (result) => result.id == row.shadowResultValue,
-                  )?.value
-                }
-              </>
+              <div style={{ whiteSpace: "normal", wordWrap: "break-word" }}>
+                {dictValue || ""}
+              </div>
             );
 
           default:
-            return row.shadowResultValue;
+            return (
+              <div style={{ whiteSpace: "normal", wordWrap: "break-word" }}>
+                {row.shadowResultValue || ""}
+              </div>
+            );
         }
       default:
         return;
@@ -1934,6 +1939,19 @@ export function SearchResults(props) {
                 isSortable
                 expandableRows
                 expandableRowsComponent={renderReferral}
+                customStyles={{
+                  cells: {
+                    style: {
+                      whiteSpace: "normal",
+                      wordWrap: "break-word",
+                    },
+                  },
+                  table: {
+                    style: {
+                      tableLayout: "auto",
+                    },
+                  },
+                }}
               ></DataTable>
               <Pagination
                 onChange={handlePageChange}
