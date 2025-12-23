@@ -101,9 +101,6 @@ public class NoteBookRestController extends BaseRestController {
     @Autowired
     private NoteBookPageService noteBookPageService;
 
-    @Autowired
-    private NotebookPageSampleService notebookPageSampleService;
-
     @GetMapping(value = "/dashboard/entries", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<List<NoteBookDisplayBean>> getFilteredNoteBooks(
