@@ -347,6 +347,24 @@
     </changeSet>
 
     <!-- ======================================================== -->
+    <!-- SYNC WORKFLOW PAGE TEMPLATE SEQUENCE                     -->
+    <!-- Ensures sequence is higher than max existing ID          -->
+    <!-- ======================================================== -->
+    <changeSet id="sync-workflow-page-template-seq-for-bacteriology" author="openelis-bacteriology" runAlways="true">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="workflow_page_template" schemaName="clinlims"/>
+            <sequenceExists sequenceName="workflow_page_template_seq" schemaName="clinlims"/>
+        </preConditions>
+        <comment>Sync workflow_page_template_seq to max(id) + 1 to prevent duplicate key errors</comment>
+        <sql>
+            SELECT setval('clinlims.workflow_page_template_seq',
+                GREATEST((SELECT COALESCE(MAX(id), 0) FROM clinlims.workflow_page_template) + 1,
+                         (SELECT last_value FROM clinlims.workflow_page_template_seq)),
+                false);
+        </sql>
+    </changeSet>
+
+    <!-- ======================================================== -->
     <!-- BACTERIOLOGY WORKFLOW PAGE TEMPLATES                     -->
     <!-- ======================================================== -->
     <changeSet id="insert-bacteriology-workflow-page-templates" author="openelis-bacteriology">
@@ -359,7 +377,7 @@
         <comment>Insert predefined Bacteriology workflow page templates</comment>
 
         <insert tableName="workflow_page_template" schemaName="clinlims">
-            <column name="id" value="201"/>
+            <column name="id" valueSequenceNext="workflow_page_template_seq"/>
             <column name="name" value="Sample Reception"/>
             <column name="display_key" value="workflow.page.bacteriology.sampleReception"/>
             <column name="description" value="Import manifest and capture incoming samples with full reception metadata"/>
@@ -372,7 +390,7 @@
         </insert>
 
         <insert tableName="workflow_page_template" schemaName="clinlims">
-            <column name="id" value="202"/>
+            <column name="id" valueSequenceNext="workflow_page_template_seq"/>
             <column name="name" value="Laboratory Reception &amp; Verification"/>
             <column name="display_key" value="workflow.page.bacteriology.receptionVerification"/>
             <column name="description" value="Quality control assessment with checklist for temperature compliance, volume, labeling, packaging, contamination, leakage, and container type"/>
@@ -385,7 +403,7 @@
         </insert>
 
         <insert tableName="workflow_page_template" schemaName="clinlims">
-            <column name="id" value="203"/>
+            <column name="id" valueSequenceNext="workflow_page_template_seq"/>
             <column name="name" value="Temporary Storage Assignment"/>
             <column name="display_key" value="workflow.page.bacteriology.temporaryStorage"/>
             <column name="description" value="Assign samples to temporary storage locations with storage hierarchy and environmental monitoring"/>

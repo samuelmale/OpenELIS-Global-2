@@ -234,12 +234,18 @@ public class NotebookSampleEntryController extends BaseRestController {
 
         // First pass: build sample maps from page samples
         for (org.openelisglobal.notebook.valueholder.NotebookPageSample nps : pageSamples) {
-            org.openelisglobal.sampleitem.valueholder.SampleItem sampleItem = sampleItemService
-                    .get(nps.getSampleItemId());
-            if (sampleItem != null) {
-                Map<String, Object> sampleMap = buildSampleMap(sampleItem, nps);
-                sampleMaps.add(sampleMap);
-                includedSampleIds.add(sampleItem.getId());
+            try {
+                org.openelisglobal.sampleitem.valueholder.SampleItem sampleItem = sampleItemService
+                        .get(nps.getSampleItemId());
+                if (sampleItem != null) {
+                    Map<String, Object> sampleMap = buildSampleMap(sampleItem, nps);
+                    sampleMaps.add(sampleMap);
+                    includedSampleIds.add(sampleItem.getId());
+                }
+            } catch (Exception e) {
+                // Skip orphaned NotebookPageSample records where sample_item no longer exists
+                LogEvent.logWarn(this.getClass().getName(), "getPageSamples",
+                        "Skipping orphaned page sample with sample_item_id: " + nps.getSampleItemId());
             }
         }
 

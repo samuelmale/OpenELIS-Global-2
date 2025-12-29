@@ -468,7 +468,7 @@ function SampleGrid({
                         <TableCell key={col.key}>
                           {col.render
                             ? col.render(row._original[col.key], row._original)
-                            : row._original[col.key]}
+                            : row._original[col.key] || "-"}
                         </TableCell>
                       ))}
                     </>

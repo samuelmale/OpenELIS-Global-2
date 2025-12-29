@@ -446,6 +446,55 @@ public class SampleStorageServiceImpl implements SampleStorageService {
                 }
             }
             break;
+        case "box":
+            StorageBox box = (StorageBox) storageLocationService.get(assignment.getLocationId(), StorageBox.class);
+            if (box != null) {
+                rack = box.getParentRack();
+                if (rack != null) {
+                    shelf = rack.getParentShelf();
+                    if (shelf != null) {
+                        device = shelf.getParentDevice();
+                        if (device != null) {
+                            room = device.getParentRoom();
+                        }
+                    }
+                }
+                // Build path with available hierarchy levels
+                StringBuilder pathBuilder = new StringBuilder();
+                if (room != null) {
+                    pathBuilder.append(room.getName());
+                }
+                if (device != null) {
+                    if (pathBuilder.length() > 0) {
+                        pathBuilder.append(" > ");
+                    }
+                    pathBuilder.append(device.getName());
+                }
+                if (shelf != null) {
+                    if (pathBuilder.length() > 0) {
+                        pathBuilder.append(" > ");
+                    }
+                    pathBuilder.append(shelf.getLabel());
+                }
+                if (rack != null) {
+                    if (pathBuilder.length() > 0) {
+                        pathBuilder.append(" > ");
+                    }
+                    pathBuilder.append(rack.getLabel());
+                }
+                // Add box label
+                if (pathBuilder.length() > 0) {
+                    pathBuilder.append(" > ");
+                }
+                pathBuilder.append(box.getLabel());
+                // Add position coordinate (well) if available
+                if (assignment.getPositionCoordinate() != null
+                        && !assignment.getPositionCoordinate().trim().isEmpty()) {
+                    pathBuilder.append(" - ").append(assignment.getPositionCoordinate());
+                }
+                hierarchicalPath = pathBuilder.toString();
+            }
+            break;
         }
 
         return hierarchicalPath;
@@ -1108,8 +1157,6 @@ public class SampleStorageServiceImpl implements SampleStorageService {
                     }
                 }
             }
-            String coord = positionCoordinate != null && !positionCoordinate.trim().isEmpty() ? positionCoordinate
-                    : box.getLabel();
             StringBuilder builder = new StringBuilder();
             if (room != null) {
                 builder.append(room.getName());
@@ -1132,11 +1179,14 @@ public class SampleStorageServiceImpl implements SampleStorageService {
                 }
                 builder.append(rack.getLabel());
             }
-            if (coord != null) {
-                if (builder.length() > 0) {
-                    builder.append(" > ");
-                }
-                builder.append(coord);
+            // Always add box label
+            if (builder.length() > 0) {
+                builder.append(" > ");
+            }
+            builder.append(box.getLabel());
+            // Add position coordinate (well) if available
+            if (positionCoordinate != null && !positionCoordinate.trim().isEmpty()) {
+                builder.append(" - ").append(positionCoordinate);
             }
             return builder.length() > 0 ? builder.toString() : "Unknown Location";
         default:

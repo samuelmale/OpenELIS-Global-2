@@ -49,4 +49,34 @@
     <include file="liquibase/3.4.x.x/032-notebook-delivery-record.xml"/>
     <include file="liquibase/3.4.x.x/031-mntd-environmental-monitoring-page.xml"/>
 
+    <!-- TB Laboratory Workflow Feature (053) -->
+    <include file="liquibase/3.4.x.x/035-tuberculosis-notebook-template.xml"/>
+    <include file="liquibase/3.4.x.x/036-tb-sample-registration.xml"/>
+    <include file="liquibase/3.4.x.x/037-tb-quality-check.xml"/>
+    <include file="liquibase/3.4.x.x/038-tb-culture-reading.xml"/>
+    <include file="liquibase/3.4.x.x/039-tb-sample-id.xml"/>
+    <include file="liquibase/3.4.x.x/040-tb-smear-result.xml"/>
+    <include file="liquibase/3.4.x.x/041-tb-identification-result.xml"/>
+
+    <!-- Organization-SampleType Association -->
+    <include file="liquibase/3.4.x.x/042-organization-sample-type.xml"/>
+
+    <!-- TB Page 1 Rename: Sample Creation -> Sample Accession & Registration -->
+    <include file="liquibase/3.4.x.x/043-tb-page1-rename.xml"/>
+
+    <!-- TB Organization, Sample Types, and Notebook Linking -->
+    <include file="liquibase/3.4.x.x/044-tb-organization-sample-types.xml"/>
+
+    <!-- Department-Sample Type Association (for specimen type validation) -->
+    <include file="liquibase/3.4.x.x/045-department-sample-type.xml"/>
+
+    <!-- TB Department-Sample Type Links -->
+    <include file="liquibase/3.4.x.x/046-tb-department-sample-types.xml"/>
+
+    <!-- TB Stage 4: Initial Processing & Incubation -->
+    <include file="liquibase/3.4.x.x/047-tb-media-preparation.xml"/>
+    <include file="liquibase/3.4.x.x/048-tb-sample-processing.xml"/>
+    <include file="liquibase/3.4.x.x/049-tb-culture-reading-enhance.xml"/>
+
+
 </databaseChangeLog>

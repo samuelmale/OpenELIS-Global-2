@@ -68,6 +68,7 @@ import PharmaceuticalWorkflowTab from "./workflow/PharmaceuticalWorkflowTab";
 import BacteriologyWorkflowTab from "./workflow/BacteriologyWorkflowTab";
 
 const NoteBookInstanceEntryForm = () => {
+  console.log("=== NoteBookInstanceEntryForm LOADED - Dec 24 test ===");
   let breadcrumbs = [
     { label: "home.label", link: "/" },
     { label: "notebook.label.dashboard", link: "/NoteBookDashboard" },
