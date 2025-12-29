@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableHead,
@@ -57,20 +57,12 @@ function SampleGrid({
   onStatusFilterChange,
   loading = false,
   showHierarchy = false,
-  showPatient = false,
   additionalColumns = [],
   columns = null,
 }) {
-  console.log("🔧 SampleGrid VERSION: 2026-01-20-v2", {
-    gridId,
-    selectedIds,
-    onSelectionChange: !!onSelectionChange,
-    showSelection,
-    samplesCount: samples.length,
-  });
   const intl = useIntl();
 
-  // Pagination state - default page size 10
+  // Pagination state
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -116,67 +108,13 @@ function SampleGrid({
     },
   ];
 
-  // Build hierarchical sort order so children appear after their parents
-  const sortedSamplesWithHierarchy = useMemo(() => {
-    if (!samples || samples.length === 0) return [];
-
-    // Create a map for quick lookup by ID
-    const sampleMap = new Map();
-    samples.forEach((s) => sampleMap.set(String(s.id), s));
-
-    // Build parent-to-children mapping
-    const childrenMap = new Map();
-    samples.forEach((s) => {
-      if (s.parentSampleItemId) {
-        const parentId = String(s.parentSampleItemId);
-        if (!childrenMap.has(parentId)) {
-          childrenMap.set(parentId, []);
-        }
-        childrenMap.get(parentId).push(s);
-      }
-    });
-
-    // Sort children by external ID for consistent ordering
-    childrenMap.forEach((children) => {
-      children.sort((a, b) =>
-        (a.externalId || "").localeCompare(b.externalId || ""),
-      );
-    });
-
-    // Recursively add sample and its descendants
-    const addWithDescendants = (sample, result) => {
-      result.push(sample);
-      const children = childrenMap.get(String(sample.id)) || [];
-      children.forEach((child) => addWithDescendants(child, result));
-    };
-
-    // Start with root samples (no parent) and build the sorted list
-    const result = [];
-    const rootSamples = samples
-      .filter((s) => !s.parentSampleItemId)
-      .sort((a, b) => (a.externalId || "").localeCompare(b.externalId || ""));
-
-    rootSamples.forEach((root) => addWithDescendants(root, result));
-
-    // Add any orphans (samples whose parent isn't in this list)
-    samples.forEach((s) => {
-      if (!result.includes(s)) {
-        result.push(s);
-      }
-    });
-
-    return result;
-  }, [samples]);
-
   // Filter samples based on search and status
   const filteredSamples = useMemo(() => {
-    let result = sortedSamplesWithHierarchy;
+    let result = samples;
 
-    // Apply status filter (check both status and pageStatus for compatibility)
+    // Apply status filter
     if (statusFilter && statusFilter !== "ALL") {
-      result = result.filter(
-        (s) => (s.status || s.pageStatus) === statusFilter,
-      );
+      result = result.filter((s) => s.status === statusFilter);
     }
 
     // Apply search filter
@@ -188,16 +126,12 @@ function SampleGrid({
           (s.accessionNumber &&
             s.accessionNumber.toLowerCase().includes(term)) ||
           (s.sampleType && s.sampleType.toLowerCase().includes(term)) ||
-          (s.patientName && s.patientName.toLowerCase().includes(term)) ||
-          (s.firstName && s.firstName.toLowerCase().includes(term)) ||
-          (s.surname && s.surname.toLowerCase().includes(term)) ||
-          (s.sampleCategory && s.sampleCategory.toLowerCase().includes(term)) ||
-          (s.sourceFacility && s.sourceFacility.toLowerCase().includes(term)),
+          (s.patientName && s.patientName.toLowerCase().includes(term)),
       );
     }
 
     return result;
-  }, [sortedSamplesWithHierarchy, statusFilter, searchTerm]);
+  }, [samples, statusFilter, searchTerm]);
 
   // Paginate
   const paginatedSamples = useMemo(() => {
@@ -219,26 +153,13 @@ function SampleGrid({
 
   // Handle row selection - toggle based on current state
   const handleSelectRow = (id) => {
-    console.log("🔵 handleSelectRow called", {
-      id,
-      idType: typeof id,
-      selectedIds,
-      selectedIdsTypes: selectedIds.map((sid) => typeof sid),
-      onSelectionChange: !!onSelectionChange,
-    });
     if (onSelectionChange) {
       const isCurrentlySelected = selectedIds.includes(id);
       if (isCurrentlySelected) {
-        const newSelection = selectedIds.filter((sid) => sid !== id);
-        console.log("🔴 Deselecting, new selection:", newSelection);
-        onSelectionChange(newSelection);
+        onSelectionChange(selectedIds.filter((sid) => sid !== id));
       } else {
-        const newSelection = [...selectedIds, id];
-        console.log("🟢 Selecting, new selection:", newSelection);
-        onSelectionChange(newSelection);
+        onSelectionChange([...selectedIds, id]);
       }
-    } else {
-      console.warn("⚠️ onSelectionChange is not provided!");
     }
   };
 
@@ -331,17 +252,6 @@ function SampleGrid({
             defaultMessage: "Accession #",
           }),
         },
-        ...(showPatient
-          ? [
-              {
-                key: "patientName",
-                header: intl.formatMessage({
-                  id: "notebook.sample.patient",
-                  defaultMessage: "Patient",
-                }),
-              },
-            ]
-          : []),
         {
           key: "sampleType",
           header: intl.formatMessage({
@@ -350,31 +260,10 @@ function SampleGrid({
           }),
         },
         {
-          key: "sampleCategory",
-          header: intl.formatMessage({
-            id: "notebook.sample.category",
-            defaultMessage: "Category",
-          }),
-        },
-        {
-          key: "sourceFacility",
-          header: intl.formatMessage({
-            id: "notebook.sample.sourceFacility",
-            defaultMessage: "Source",
-          }),
-        },
-        {
           key: "collectionDate",
           header: intl.formatMessage({
             id: "notebook.sample.collectionDate",
             defaultMessage: "Collection Date",
-          }),
-        },
-        {
-          key: "receivedDate",
-          header: intl.formatMessage({
-            id: "notebook.sample.receivedDate",
-            defaultMessage: "Received Date",
           }),
         },
         {
@@ -386,11 +275,13 @@ function SampleGrid({
         },
       ];
 
-  // Add additional column headers (always include additionalColumns)
-  const additionalHeaders = additionalColumns.map((col) => ({
-    key: col.key,
-    header: col.header,
-  }));
+  // Add additional column headers (only when not using custom columns)
+  const additionalHeaders = columns
+    ? []
+    : additionalColumns.map((col) => ({
+        key: col.key,
+        header: col.header,
+      }));
 
   const headers = [
     ...baseHeaders,
@@ -440,82 +331,16 @@ function SampleGrid({
     );
   };
 
-  // Format date for display
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "-";
-    try {
-      const date = new Date(dateStr);
-      if (isNaN(date.getTime())) return dateStr;
-      return date.toLocaleDateString();
-    } catch {
-      return dateStr;
-    }
-  };
-
-  // Format category for display with tag
-  const getCategoryTag = (category) => {
-    if (!category) return "-";
-    if (category === "Clinical diagnostic" || category === "Clinical") {
-      return (
-        <Tag type="blue" size="sm">
-          Clinical
-        </Tag>
-      );
-    }
-    if (category === "Research") {
-      return (
-        <Tag type="purple" size="sm">
-          Research
-        </Tag>
-      );
-    }
-    return category;
-  };
-
   // Transform samples to rows
-  const rows = paginatedSamples.map((sample, index) => {
-    // Helper function to safely extract string value from any field
-    const safeString = (value, fallback = "-") => {
-      if (!value) return fallback;
-      if (typeof value === "string") return value;
-      if (typeof value === "number") return String(value);
-      if (typeof value === "object") {
-        return (
-          value.value ||
-          value.name ||
-          value.description ||
-          value.text ||
-          fallback
-        );
-      }
-      return String(value);
-    };
-
-    // Safely extract ID - MUST be a valid ID, never fallback to index
-    let safeId = String(sample.id || sample.sampleItemId || `sample-${index}`);
-
-    // Safely extract all fields
-    const safeSampleType = safeString(
-      sample.sampleType || sample.typeOfSample?.description,
-      "-",
-    );
-
-    return {
-      id: safeId,
-      externalId: safeString(sample.externalId),
-      accessionNumber: safeString(sample.accessionNumber),
-      patientName: safeString(sample.patientName || sample.data?.patientName),
-      sampleType: safeSampleType,
-      sampleCategory: safeString(sample.sampleCategory),
-      sourceFacility: safeString(sample.sourceFacility),
-      collectionDate: safeString(
-        sample.collectionDate || sample.collectionDateTime,
-      ),
-      receivedDate: safeString(sample.receivedDate || sample.receivedDateTime),
-      status: safeString(sample.status, "PENDING"),
-      _original: sample,
-    };
-  });
+  const rows = paginatedSamples.map((sample) => ({
+    id: String(sample.id),
+    externalId: sample.externalId || "-",
+    accessionNumber: sample.accessionNumber || "-",
+    sampleType: sample.sampleType || sample.typeOfSample?.description || "-",
+    collectionDate: sample.collectionDate || "-",
+    status: sample.status || "PENDING",
+    _original: sample,
+  }));
 
   return (
     <div className="sample-grid">
@@ -619,71 +444,13 @@ function SampleGrid({
                   )}
                   {/* Render custom columns if provided */}
                   {customColumns.length > 0 ? (
-                    <>
-                      {customColumns.map((col) => {
-                        // Always use render function if provided, otherwise safely extract value
-                        let cellValue;
-                        try {
-                          if (col.render) {
-                            cellValue = col.render(
-                              row._original[col.key],
-                              row._original,
-                            );
-                          } else {
-                            const rawValue =
-                              row._original[col.key] || row[col.key];
-                            // Use safeString helper to ensure we don't render objects
-                            const safeString = (value, fallback = "-") => {
-                              if (!value) return fallback;
-                              if (typeof value === "string") return value;
-                              if (typeof value === "number")
-                                return String(value);
-                              if (typeof value === "object") {
-                                return (
-                                  value.value ||
-                                  value.name ||
-                                  value.description ||
-                                  value.text ||
-                                  fallback
-                                );
-                              }
-                              return String(value);
-                            };
-                            cellValue = safeString(rawValue);
-                          }
-
-                          // Final safety check - if cellValue is still an object, stringify it
-                          if (
-                            cellValue &&
-                            typeof cellValue === "object" &&
-                            !React.isValidElement(cellValue)
-                          ) {
-                            console.error(
-                              "Column render returned an object:",
-                              col.key,
-                              cellValue,
-                            );
-                            cellValue = JSON.stringify(cellValue);
-                          }
-                        } catch (err) {
-                          console.error(
-                            "Error rendering column:",
-                            col.key,
-                            err,
-                          );
-                          cellValue = "-";
-                        }
-                        return <TableCell key={col.key}>{cellValue}</TableCell>;
-                      })}
-                      {/* Also render additional columns when using custom columns */}
-                      {additionalColumns.map((col) => (
-                        <TableCell key={col.key}>
-                          {col.render
-                            ? col.render(row._original[col.key], row._original)
-                            : row._original[col.key] || "-"}
-                        </TableCell>
-                      ))}
-                    </>
+                    customColumns.map((col) => (
+                      <TableCell key={col.key}>
+                        {col.render
+                          ? col.render(row._original[col.key], row._original)
+                          : row._original[col.key] || row[col.key] || "-"}
+                      </TableCell>
+                    ))
                   ) : (
                     /* Default column rendering */
                     <>
@@ -694,81 +461,20 @@ function SampleGrid({
                       )}
                       <TableCell>{row.externalId}</TableCell>
                       <TableCell>{row.accessionNumber}</TableCell>
-                      {showPatient && <TableCell>{row.patientName}</TableCell>}
                       <TableCell>{row.sampleType}</TableCell>
-                      <TableCell>
-                        {getCategoryTag(row.sampleCategory)}
-                      </TableCell>
-                      <TableCell>{row.sourceFacility}</TableCell>
-                      <TableCell>{formatDate(row.collectionDate)}</TableCell>
-                      <TableCell>{formatDate(row.receivedDate)}</TableCell>
-                      <TableCell>
-                        {getStatusTag(row.status || row.pageStatus)}
-                      </TableCell>
-                      {additionalColumns.map((col) => {
-                        let cellValue;
-                        try {
-                          if (col.render) {
-                            cellValue = col.render(
-                              row._original[col.key],
-                              row._original,
-                            );
-                          } else {
-                            const rawValue = row._original[col.key];
-                            // Use safeString helper to ensure we don't render objects
-                            const safeString = (value, fallback = "-") => {
-                              if (!value) return fallback;
-                              if (typeof value === "string") return value;
-                              if (typeof value === "number")
-                                return String(value);
-                              if (typeof value === "object") {
-                                return (
-                                  value.value ||
-                                  value.name ||
-                                  value.description ||
-                                  value.text ||
-                                  fallback
-                                );
-                              }
-                              return String(value);
-                            };
-                            cellValue = safeString(rawValue);
-                          }
-
-                          // Final safety check - if cellValue is still an object, stringify it
-                          if (
-                            cellValue &&
-                            typeof cellValue === "object" &&
-                            !React.isValidElement(cellValue)
-                          ) {
-                            console.error(
-                              "Additional column render returned an object:",
-                              col.key,
-                              cellValue,
-                            );
-                            cellValue = JSON.stringify(cellValue);
-                          }
-                        } catch (err) {
-                          console.error(
-                            "Error rendering additional column:",
-                            col.key,
-                            err,
-                          );
-                          cellValue = "-";
-                        }
-                        return <TableCell key={col.key}>{cellValue}</TableCell>;
-                      })}
+                      <TableCell>{row.collectionDate}</TableCell>
+                      <TableCell>{getStatusTag(row.status)}</TableCell>
+                      {additionalColumns.map((col) => (
+                        <TableCell key={col.key}>
+                          {col.render
+                            ? col.render(row._original[col.key], row._original)
+                            : row._original[col.key] || "-"}
+                        </TableCell>
+                      ))}
                     </>
                   )}
                   <TableCell>
-                    <OverflowMenu
-                      flipped
-                      size="sm"
-                      ariaLabel={intl.formatMessage({
-                        id: "notebook.sample.actions",
-                        defaultMessage: "Sample actions",
-                      })}
-                    >
+                    <OverflowMenu flipped size="sm">
                       <OverflowMenuItem
                         itemText={intl.formatMessage({
                           id: "notebook.sample.action.view",
