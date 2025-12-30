@@ -36,7 +36,6 @@ import {
   Time,
   Analytics,
   Activity,
-  Download,
 } from "@carbon/react/icons";
 import { FormattedMessage, useIntl } from "react-intl";
 import { getFromOpenElisServer } from "../../../utils/Utils";
@@ -62,6 +61,7 @@ import "../../workflow/NotebookWorkflow.css";
  * @param {Object} props
  * @param {number} props.entryId - The notebook entry ID
  * @param {number} props.notebookId - The notebook ID
+ * @param {number} props.templateId - Parent template ID (for entries that belong to a project)
  * @param {Object} props.pageData - Page configuration data
  * @param {Object} props.progress - Page progress info
  * @param {function} props.onProgressUpdate - Callback when progress changes
@@ -69,6 +69,7 @@ import "../../workflow/NotebookWorkflow.css";
 function PathologyReportingPage({
   entryId,
   notebookId,
+  templateId,
   pageData,
   onProgressUpdate,
 }) {
@@ -147,9 +148,6 @@ function PathologyReportingPage({
     reportNotes: "",
   });
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
-
-  // Report type - only Summary Report is available
-  const reportType = "SUMMARY";
 
   // Export state
   const [exporting, setExporting] = useState(false);
@@ -334,335 +332,6 @@ function PathologyReportingPage({
   }, [loadMetrics]);
 
   // Handle export metrics to Excel
-  const handleExportMetrics = async () => {
-    const nbId = notebookId || entryId;
-    if (!nbId) {
-      setError(
-        intl.formatMessage({
-          id: "pathology.reporting.error.noNotebook",
-          defaultMessage: "Notebook not found",
-        }),
-      );
-      return;
-    }
-
-    setExporting(true);
-    setError(null);
-
-    try {
-      const params = new URLSearchParams({
-        entryId: nbId,
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate,
-        format: "excel",
-      });
-
-      const response = await fetch(
-        `${config.serverBaseUrl}/rest/notebook/pathology/metrics/export?${params.toString()}`,
-        {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "X-CSRF-Token": localStorage.getItem("CSRF"),
-          },
-        },
-      );
-
-      const contentType = response.headers.get("content-type") || "";
-      const isExcelFile =
-        contentType.includes(
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        ) || contentType.includes("application/vnd.ms-excel");
-
-      if (
-        response.ok &&
-        (isExcelFile || contentType.includes("application/octet-stream"))
-      ) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        const dateStr = new Date().toISOString().split("T")[0];
-        a.download = `pathology_metrics_${dateStr}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
-        }, 100);
-
-        setSuccess(
-          intl.formatMessage({
-            id: "pathology.reporting.exportSuccess",
-            defaultMessage: "Metrics exported successfully",
-          }),
-        );
-      } else {
-        // Fallback: Generate CSV from current metrics data
-        await exportMetricsToCSV();
-      }
-    } catch (err) {
-      console.error("Export error:", err);
-      // Fallback: Generate CSV from current metrics data
-      await exportMetricsToCSV();
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  // Helper to escape CSV values (handles commas, quotes, newlines)
-  const escapeCsvValue = (value) => {
-    if (value === null || value === undefined) return "";
-    const str = String(value);
-    // If value contains comma, quote, or newline, wrap in quotes and escape internal quotes
-    if (str.includes(",") || str.includes('"') || str.includes("\n")) {
-      return `"${str.replace(/"/g, '""')}"`;
-    }
-    return str;
-  };
-
-  // Convert array of arrays to CSV string
-  const arrayToCSV = (data) => {
-    return data.map((row) => row.map(escapeCsvValue).join(",")).join("\n");
-  };
-
-  // Generate CSV file from current metrics data (Excel-compatible)
-  const exportMetricsToCSV = useCallback(async () => {
-    try {
-      const csvData = [];
-
-      // =============================================
-      // Report Header
-      // =============================================
-      csvData.push(["PATHOLOGY PERFORMANCE METRICS REPORT"]);
-      csvData.push([
-        `Report Period: ${dateRange.startDate} to ${dateRange.endDate}`,
-      ]);
-      csvData.push([`Generated: ${new Date().toLocaleString()}`]);
-      csvData.push([`Overall Performance Health Score: ${healthScore}%`]);
-      csvData.push([]);
-
-      // =============================================
-      // Key Performance Indicators Section
-      // =============================================
-      csvData.push(["KEY PERFORMANCE INDICATORS"]);
-      csvData.push(["Metric", "Value", "Target", "Status"]);
-      csvData.push([
-        "Total Specimens Processed",
-        metrics.monthlySpecimenVolume?.total ?? 0,
-        "-",
-        "-",
-      ]);
-      csvData.push([
-        "Specimen Rejection Rate",
-        `${metrics.specimenRejectionRate ?? 0}%`,
-        "<5%",
-        (metrics.specimenRejectionRate ?? 0) <= 5
-          ? "Within Target"
-          : "Above Target",
-      ]);
-      csvData.push([
-        "Assay Success Rate",
-        `${metrics.assaySuccessRate ?? 0}%`,
-        ">95%",
-        (metrics.assaySuccessRate ?? 0) >= 95
-          ? "Within Target"
-          : "Below Target",
-      ]);
-      csvData.push([
-        "Average TAT (hours)",
-        metrics.turnaroundTime?.overall ?? 0,
-        "<48",
-        (metrics.turnaroundTime?.overall ?? 0) <= 48
-          ? "Within Target"
-          : "Above Target",
-      ]);
-      csvData.push([
-        "Equipment Downtime (hours)",
-        metrics.equipmentDowntime?.total ?? 0,
-        "<8",
-        (metrics.equipmentDowntime?.total ?? 0) <= 8
-          ? "Within Target"
-          : "Above Target",
-      ]);
-      csvData.push([
-        "QC Meetings This Period",
-        metrics.qcMeetingsCount ?? 0,
-        "-",
-        "-",
-      ]);
-      csvData.push([]);
-
-      // =============================================
-      // Performance Score Breakdown
-      // =============================================
-      const rejRate = metrics.specimenRejectionRate ?? 0;
-      const assayRate = metrics.assaySuccessRate ?? 0;
-      const tatVal = metrics.turnaroundTime?.overall ?? 0;
-      const downtimeVal = metrics.equipmentDowntime?.total ?? 0;
-
-      csvData.push(["PERFORMANCE SCORE BREAKDOWN"]);
-      csvData.push(["Category", "Score", "Max", "Status"]);
-      csvData.push([
-        "Rejection Rate",
-        rejRate <= 5 ? 25 : rejRate <= 10 ? 15 : 0,
-        25,
-        rejRate <= 5 ? "Good" : "Needs Improvement",
-      ]);
-      csvData.push([
-        "Assay Success",
-        assayRate >= 95 ? 25 : assayRate >= 90 ? 15 : 0,
-        25,
-        assayRate >= 95 ? "Good" : "Needs Improvement",
-      ]);
-      csvData.push([
-        "Turnaround Time",
-        tatVal <= 48 ? 25 : tatVal <= 72 ? 15 : 0,
-        25,
-        tatVal <= 48 ? "Good" : "Needs Improvement",
-      ]);
-      csvData.push([
-        "Equipment Uptime",
-        downtimeVal <= 8 ? 25 : downtimeVal <= 24 ? 15 : 0,
-        25,
-        downtimeVal <= 8 ? "Good" : "Needs Improvement",
-      ]);
-      csvData.push([]);
-      csvData.push([]);
-
-      // =============================================
-      // Specimen Volume by Type
-      // =============================================
-      csvData.push(["MONTHLY SPECIMEN VOLUME BY TYPE"]);
-      csvData.push(["Specimen Type", "Count", "Percentage"]);
-      specimenVolumeData.forEach((item) => {
-        csvData.push([item.specimenType, item.count, `${item.percentage}%`]);
-      });
-      if (specimenVolumeData.length === 0) {
-        csvData.push(["No data available", "", ""]);
-      }
-      csvData.push([]);
-      csvData.push([]);
-
-      // =============================================
-      // Turnaround Time by Specimen Type
-      // =============================================
-      csvData.push(["TURNAROUND TIME BY SPECIMEN TYPE"]);
-      csvData.push([
-        "Specimen Type",
-        "Average TAT (hrs)",
-        "Min TAT (hrs)",
-        "Max TAT (hrs)",
-        "Within Target %",
-      ]);
-      tatByTypeData.forEach((item) => {
-        csvData.push([
-          item.specimenType,
-          item.averageTAT,
-          item.minTAT,
-          item.maxTAT,
-          `${item.withinTarget}%`,
-        ]);
-      });
-      if (tatByTypeData.length === 0) {
-        csvData.push(["No data available", "", "", "", ""]);
-      }
-      csvData.push([]);
-      csvData.push([]);
-
-      // =============================================
-      // Rejection Rates by Reason
-      // =============================================
-      csvData.push(["REJECTION RATES BY REASON"]);
-      csvData.push([
-        "Rejection Reason",
-        "Count",
-        "Percentage",
-        "Overall Rejection Rate",
-      ]);
-      rejectionByReasonData.forEach((item, idx) => {
-        csvData.push([
-          item.reason,
-          item.count,
-          `${item.percentage}%`,
-          idx === 0 ? `${metrics.rejectionRates?.overall ?? 0}%` : "",
-        ]);
-      });
-      if (rejectionByReasonData.length === 0) {
-        csvData.push([
-          "No rejections recorded",
-          "",
-          "",
-          `${metrics.rejectionRates?.overall ?? 0}%`,
-        ]);
-      }
-      csvData.push([]);
-      csvData.push([]);
-
-      // =============================================
-      // Equipment Downtime
-      // =============================================
-      csvData.push(["EQUIPMENT DOWNTIME (PROCESSORS, MICROTOMES, STAINERS)"]);
-      csvData.push([
-        "Equipment",
-        "Downtime (hrs)",
-        "Incidents",
-        "Last Incident",
-      ]);
-      equipmentDowntimeData.forEach((item) => {
-        csvData.push([
-          item.equipment,
-          item.downtimeHours,
-          item.incidents,
-          item.lastIncident,
-        ]);
-      });
-      if (equipmentDowntimeData.length === 0) {
-        csvData.push(["No downtime recorded", "", "", ""]);
-      }
-
-      // Convert to CSV string and create download
-      const csvString = arrayToCSV(csvData);
-      // Add BOM for Excel UTF-8 compatibility
-      const BOM = "\uFEFF";
-      const blob = new Blob([BOM + csvString], {
-        type: "text/csv;charset=utf-8;",
-      });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      const dateStr = new Date().toISOString().split("T")[0];
-      a.download = `pathology_metrics_${dateStr}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      }, 100);
-
-      setSuccess(
-        intl.formatMessage({
-          id: "pathology.reporting.exportSuccess",
-          defaultMessage: "Metrics exported successfully",
-        }),
-      );
-    } catch (err) {
-      console.error("CSV export error:", err);
-      setError("Failed to export metrics");
-    }
-  }, [
-    dateRange,
-    healthScore,
-    metrics,
-    specimenVolumeData,
-    tatByTypeData,
-    rejectionByReasonData,
-    equipmentDowntimeData,
-    intl,
-    setSuccess,
-    setError,
-  ]);
-
   // Helper function to trigger file download
   const downloadFile = useCallback((blob, fileName) => {
     const url = window.URL.createObjectURL(blob);
@@ -677,7 +346,7 @@ function PathologyReportingPage({
     }, 100);
   }, []);
 
-  // Handle generating report - downloads CSV file from backend (same pattern as MNTD)
+  // Handle generating entry report - downloads Excel file from backend with Summary + Analysis Results sheets
   const handleGenerateReport = useCallback(() => {
     const nbId = notebookId || entryId;
     if (!nbId) {
@@ -688,26 +357,15 @@ function PathologyReportingPage({
     setIsGeneratingReport(true);
     setError(null);
 
-    // Build query params for the pathology report endpoint
+    // Build query params for the pathology entry Excel export endpoint
     const params = new URLSearchParams({
-      entryId: nbId,
-      reportType: reportType,
-      reportPeriod: `${reportData.dateRangeStart || dateRange.startDate} to ${reportData.dateRangeEnd || dateRange.endDate}`,
-      startDate: reportData.dateRangeStart || dateRange.startDate,
-      endDate: reportData.dateRangeEnd || dateRange.endDate,
-      includeMetrics: "true",
-      includeSampleDetails: "true",
-      includeQcData: "true",
-      includeProcessingData: "true",
-      includeTestingData: "true",
-      includeStorageData: "true",
-      includeDisposalData: "true",
-      includeSopData: "true",
+      includeInvalid: reportData.includeAllData ? "true" : "false",
+      includeInconclusive: reportData.includeAllData ? "true" : "false",
     });
 
-    // Fetch report from backend (same pattern as MNTD)
+    // Fetch Excel report from backend
     fetch(
-      `${config.serverBaseUrl}/rest/notebook/pathology/report/export-csv?${params.toString()}`,
+      `${config.serverBaseUrl}/rest/notebook/pathology/entry/${nbId}/export/excel?${params.toString()}`,
       {
         method: "GET",
         credentials: "include",
@@ -722,7 +380,7 @@ function PathologyReportingPage({
         }
         // Get filename from Content-Disposition header if available
         const contentDisposition = response.headers.get("Content-Disposition");
-        let fileName = `Pathology_Summary_Report_${new Date().toISOString().split("T")[0]}.csv`;
+        let fileName = `Pathology_Entry_Report_${nbId}_${new Date().toISOString().split("T")[0]}.xlsx`;
 
         if (contentDisposition) {
           const match = contentDisposition.match(/filename="?([^"]+)"?/);
@@ -740,9 +398,9 @@ function PathologyReportingPage({
         setIsGeneratingReport(false);
         setSuccess(
           intl.formatMessage({
-            id: "pathology.reporting.reportGenerated",
+            id: "pathology.reporting.entryReportGenerated",
             defaultMessage:
-              "Report generated and downloaded successfully. Open in Excel for best viewing.",
+              "Entry report generated and downloaded successfully.",
           }),
         );
         setShowReportModal(false);
@@ -750,30 +408,95 @@ function PathologyReportingPage({
           dateRangeStart: "",
           dateRangeEnd: "",
           includeAllData: true,
-          reportFormat: "CSV",
+          reportFormat: "EXCEL",
           reportNotes: "",
         });
       })
       .catch((err) => {
         if (componentMounted.current) {
-          console.error("Report generation error (using local fallback):", err);
+          console.error("Entry report generation error:", err);
           setIsGeneratingReport(false);
-          // Fallback to local CSV export - this works fine, so show success message
-          exportMetricsToCSV();
-          setShowReportModal(false);
-          // The exportMetricsToCSV function already sets its own success message
+          setError(
+            intl.formatMessage({
+              id: "pathology.reporting.entryReportError",
+              defaultMessage:
+                "Failed to generate entry report. Please try again.",
+            }),
+          );
         }
       });
-  }, [
-    reportData,
-    reportType,
-    notebookId,
-    entryId,
-    dateRange,
-    intl,
-    downloadFile,
-    exportMetricsToCSV,
-  ]);
+  }, [reportData, notebookId, entryId, intl, downloadFile]);
+
+  // Handle generating project report - downloads Excel file with all entries in the project/notebook
+  // If we're viewing an entry (templateId is set), use templateId to get the parent project
+  // Otherwise, use notebookId (we're already viewing the project/template)
+  const handleGenerateProjectReport = useCallback(() => {
+    // Use templateId if available (we're viewing an entry, need parent project ID)
+    // Otherwise fall back to notebookId (we're viewing the project itself)
+    const projectId = templateId || notebookId;
+    if (!projectId) {
+      setError("Project ID not available for project report generation.");
+      return;
+    }
+
+    setExporting(true);
+    setError(null);
+
+    // Fetch Excel project report from backend
+    fetch(
+      `${config.serverBaseUrl}/rest/notebook/pathology/project/${projectId}/export/excel`,
+      {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "X-CSRF-Token": localStorage.getItem("CSRF"),
+        },
+      },
+    )
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch project report from server");
+        }
+        // Get filename from Content-Disposition header if available
+        const contentDisposition = response.headers.get("Content-Disposition");
+        let fileName = `Pathology_Project_Report_${projectId}_${new Date().toISOString().split("T")[0]}.xlsx`;
+
+        if (contentDisposition) {
+          const match = contentDisposition.match(/filename="?([^"]+)"?/);
+          if (match) fileName = match[1];
+        }
+
+        return response.blob().then((blob) => ({ blob, fileName }));
+      })
+      .then(({ blob, fileName }) => {
+        if (!componentMounted.current) return;
+
+        // Download the file
+        downloadFile(blob, fileName);
+
+        setExporting(false);
+        setSuccess(
+          intl.formatMessage({
+            id: "pathology.reporting.projectReportGenerated",
+            defaultMessage:
+              "Project report generated and downloaded successfully.",
+          }),
+        );
+      })
+      .catch((err) => {
+        if (componentMounted.current) {
+          console.error("Project report generation error:", err);
+          setExporting(false);
+          setError(
+            intl.formatMessage({
+              id: "pathology.reporting.projectReportError",
+              defaultMessage:
+                "Failed to generate project report. Please try again.",
+            }),
+          );
+        }
+      });
+  }, [templateId, notebookId, intl, downloadFile]);
 
   // Helper for date change
   const handleDateChange = (dates, fieldName, setState) => {
@@ -960,25 +683,25 @@ function PathologyReportingPage({
             kind="primary"
             size="sm"
             renderIcon={DocumentExport}
-            onClick={() => setShowReportModal(true)}
+            onClick={handleGenerateReport}
             disabled={exporting || isGeneratingReport}
           >
             <FormattedMessage
-              id="pathology.reporting.generateReport"
-              defaultMessage="Generate Report"
+              id="pathology.reporting.generateEntryReport"
+              defaultMessage="Generate Entry Report"
             />
           </Button>
           <Button
-            kind="tertiary"
+            kind="primary"
             size="sm"
-            renderIcon={Download}
-            onClick={handleExportMetrics}
-            disabled={exporting}
+            renderIcon={DocumentExport}
+            onClick={handleGenerateProjectReport}
+            disabled={exporting || isGeneratingReport}
             style={{ marginLeft: "0.5rem" }}
           >
             <FormattedMessage
-              id="pathology.reporting.quickExport"
-              defaultMessage="Quick Export CSV"
+              id="pathology.reporting.generateProjectReport"
+              defaultMessage="Generate Project Report"
             />
           </Button>
         </Column>
@@ -1617,8 +1340,8 @@ function PathologyReportingPage({
       <Modal
         open={showReportModal}
         modalHeading={intl.formatMessage({
-          id: "pathology.reporting.generateReportTitle",
-          defaultMessage: "Generate Pathology Report",
+          id: "pathology.reporting.generateEntryReportTitle",
+          defaultMessage: "Generate Entry Report",
         })}
         primaryButtonText={
           isGeneratingReport
@@ -1643,8 +1366,8 @@ function PathologyReportingPage({
         <div style={{ marginBottom: "1rem" }}>
           <p style={{ color: "#525252", marginBottom: "1rem" }}>
             <FormattedMessage
-              id="pathology.reporting.modalDescription"
-              defaultMessage="Generate a comprehensive pathology performance summary report in CSV format."
+              id="pathology.reporting.entryReportModalDescription"
+              defaultMessage="Generate a comprehensive Excel report for this notebook entry, including a summary sheet with metadata and aggregated statistics, plus detailed sample data from all workflow pages."
             />
           </p>
 

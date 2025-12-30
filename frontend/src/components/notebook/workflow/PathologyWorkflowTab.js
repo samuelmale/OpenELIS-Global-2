@@ -395,6 +395,7 @@ function PathologyWorkflowTab({ notebookId, entryId: propEntryId }) {
             progress={progress}
             onProgressUpdate={handleProgressUpdate}
             notebookId={notebook?.id}
+            templateId={notebook?.templateId}
           />
         );
       case 11:

@@ -333,7 +333,8 @@ public class NotebookPageSampleServiceImpl extends AuditableBaseObjectServiceImp
                 }
             }
 
-            // If marking as COMPLETED, update completed_by and completed_at for existing records
+            // If marking as COMPLETED, update completed_by and completed_at for existing
+            // records
             if (status == Status.COMPLETED) {
                 updateCompletionInfoString(pageId, batch, user);
             }

@@ -304,13 +304,15 @@ public class NotebookSampleEntryController extends BaseRestController {
         }
         sampleMaps.addAll(grandchildMaps);
 
-        // Repeat for grandchildren to get great-grandchildren (supports 4-level hierarchy:
+        // Repeat for grandchildren to get great-grandchildren (supports 4-level
+        // hierarchy:
         // Specimen → Cassette → Block → Slide)
         List<Map<String, Object>> greatGrandchildMaps = new java.util.ArrayList<>();
         for (Map<String, Object> grandchildMap : grandchildMaps) {
             String grandchildId = String.valueOf(grandchildMap.get("id"));
             try {
-                List<SampleItem> greatGrandchildren = sampleEntryService.getChildSamples(Integer.parseInt(grandchildId));
+                List<SampleItem> greatGrandchildren = sampleEntryService
+                        .getChildSamples(Integer.parseInt(grandchildId));
                 for (SampleItem greatGrandchild : greatGrandchildren) {
                     if (!includedSampleIds.contains(greatGrandchild.getId())) {
                         org.openelisglobal.notebook.valueholder.NotebookPageSample greatGrandchildNps = notebookPageSampleService

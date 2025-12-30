@@ -179,4 +179,31 @@ public interface ResultCompilationService {
      * @return the ID of the created NoteBookFile record
      */
     Integer attachReportToNotebook(Integer notebookId, ExportOptions options, String userId);
+
+    /**
+     * Compile a pathology notebook entry to Excel format with Summary and Analysis
+     * Results sheets. The Summary sheet contains notebook metadata and aggregated
+     * statistics. The Analysis Results sheet contains per-sample data aggregated
+     * from all workflow pages.
+     *
+     * @param entryId the notebook entry ID
+     * @param options export options (columns, filters, etc.)
+     * @return byte array containing Excel file
+     */
+    byte[] compilePathologyEntryToExcel(Integer entryId, ExportOptions options);
+
+    /**
+     * Compile a pathology project (notebook with entries) to Excel format. The
+     * report contains: - A Project Summary sheet with project metadata and
+     * aggregated statistics across all entries - Individual sheets for each entry
+     * containing their Summary and Analysis Results data
+     *
+     * This is essentially a collection of Entry Reports combined into a single
+     * workbook.
+     *
+     * @param projectId the project/notebook ID that contains entries
+     * @param options   export options (columns, filters, etc.)
+     * @return byte array containing Excel file
+     */
+    byte[] compilePathologyProjectToExcel(Integer projectId, ExportOptions options);
 }

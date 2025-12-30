@@ -64,9 +64,9 @@ public interface NotebookPageSampleDAO extends BaseDAO<NotebookPageSample, Integ
     int bulkUpdateStatus(Integer pageId, List<Integer> sampleIds, Status status);
 
     /**
-     * Bulk update status for multiple samples on a page using String IDs.
-     * Supports composite sample IDs (e.g., "123_cassette_0") used in
-     * pathology workflow pages where samples are expanded from parent items.
+     * Bulk update status for multiple samples on a page using String IDs. Supports
+     * composite sample IDs (e.g., "123_cassette_0") used in pathology workflow
+     * pages where samples are expanded from parent items.
      *
      * @param pageId    the notebook page ID
      * @param sampleIds list of sample item IDs as Strings

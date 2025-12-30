@@ -1129,8 +1129,8 @@ public class NotebookBulkOperationController extends BaseRestController {
      * Update status for multiple samples on a page using String IDs. POST
      * /notebook/bulk/page/{pageId}/samples/status-string
      *
-     * This endpoint supports composite sample IDs (e.g., "123_cassette_0") used
-     * in pathology workflow pages where samples are expanded from parent items.
+     * This endpoint supports composite sample IDs (e.g., "123_cassette_0") used in
+     * pathology workflow pages where samples are expanded from parent items.
      *
      * @param pageId      the notebook page ID
      * @param request     contains sampleIds (as Strings) and status
@@ -1170,7 +1170,8 @@ public class NotebookBulkOperationController extends BaseRestController {
             return ResponseEntity.badRequest().body(error);
         }
 
-        int updatedCount = bulkOperationService.bulkUpdateStatusString(pageId, request.getSampleIds(), status, sysUserId);
+        int updatedCount = bulkOperationService.bulkUpdateStatusString(pageId, request.getSampleIds(), status,
+                sysUserId);
 
         Map<String, Object> result = new HashMap<>();
         result.put("updatedCount", updatedCount);
@@ -1531,8 +1532,8 @@ public class NotebookBulkOperationController extends BaseRestController {
     }
 
     /**
-     * Request body for status update operation with String sample IDs.
-     * Used for composite sample IDs (e.g., "123_cassette_0") in pathology workflows.
+     * Request body for status update operation with String sample IDs. Used for
+     * composite sample IDs (e.g., "123_cassette_0") in pathology workflows.
      */
     public static class StringStatusUpdateRequest {
         private List<String> sampleIds;
