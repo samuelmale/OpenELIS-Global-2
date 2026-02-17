@@ -87,6 +87,15 @@
         <class>org.openelisglobal.analyzer.valueholder.UnitMapping</class>
         <class>org.openelisglobal.analyzer.valueholder.QualitativeResultMapping</class>
 
+        <!-- QC Westgard Rules entities (003-westgard-qc) -->
+        <class>org.openelisglobal.qc.valueholder.QCControlLot</class>
+        <class>org.openelisglobal.qc.valueholder.QCResult</class>
+        <class>org.openelisglobal.qc.valueholder.QCStatistics</class>
+        <class>org.openelisglobal.qc.valueholder.WestgardRuleConfig</class>
+        <class>org.openelisglobal.qc.valueholder.QCRuleViolation</class>
+        <class>org.openelisglobal.qc.valueholder.QCCorrectiveAction</class>
+        <class>org.openelisglobal.qc.valueholder.QCAlert</class>
+
         <properties>
             <property name="hibernate.cfg_xml_file"
                 value="classpath:hibernate/hibernate.cfg.xml" />
