@@ -2,13 +2,19 @@ package org.openelisglobal.qc.service;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.openelisglobal.common.log.LogEvent;
+import org.openelisglobal.notifications.dao.NotificationDAO;
+import org.openelisglobal.notifications.entity.Notification;
 import org.openelisglobal.qc.dao.QCAlertDAO;
 import org.openelisglobal.qc.valueholder.QCAlert;
 import org.openelisglobal.qc.valueholder.QCRuleViolation;
+import org.openelisglobal.systemuser.service.SystemUserService;
+import org.openelisglobal.systemuser.valueholder.SystemUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,46 +40,82 @@ public class QCAlertServiceImpl implements QCAlertService {
     @Autowired
     private QCAlertDAO alertDAO;
 
+    @Autowired
+    private NotificationDAO notificationDAO;
+
+    @Autowired
+    private SystemUserService systemUserService;
+
     @Override
     @Transactional
-    public QCAlert createAlertForViolation(QCRuleViolation violation) {
+    public List<QCAlert> createAlertsForViolation(QCRuleViolation violation) {
         if (violation == null) {
-            LogEvent.logWarn(this.getClass().getName(), "createAlertForViolation",
+            LogEvent.logWarn(this.getClass().getName(), "createAlertsForViolation",
                     "Cannot create alert for null violation");
-            return null;
+            return List.of();
         }
 
         // Check if this is a WARNING that should be batched
         if (!IMMEDIATE_SEVERITY.equals(violation.getSeverity()) && shouldBatchAlert(violation)) {
-            LogEvent.logInfo(this.getClass().getName(), "createAlertForViolation",
+            LogEvent.logInfo(this.getClass().getName(), "createAlertsForViolation",
                     "Alert batched for violation: " + violation.getId());
-            return null;
+            return List.of();
         }
 
-        // Create the alert
-        QCAlert alert = new QCAlert();
-        alert.setId(UUID.randomUUID().toString());
-        alert.setViolationId(violation.getId());
-        alert.setAlertType(ALERT_TYPE_VIOLATION);
-        alert.setSentDateTime(Timestamp.from(Instant.now()));
-        alert.setReadStatus(false);
-
-        // Set subject and body based on violation
         String subject = formatAlertSubject(violation);
         String body = formatAlertBody(violation);
-        alert.setMessageSubject(subject);
-        alert.setMessageBody(body);
+        Timestamp now = Timestamp.from(Instant.now());
 
-        // For now, we'll leave recipientUserId as 0 (system)
-        // In a full implementation, this would look up lab managers for the instrument
-        alert.setRecipientUserId(0);
+        // TODO: Make recipient selection configurable (e.g., by role or instrument
+        // assignment) instead of broadcasting to all active users.
+        List<SystemUser> activeUsers = getActiveUsers();
+        List<QCAlert> createdAlerts = new ArrayList<>();
 
-        alertDAO.insert(alert);
+        for (SystemUser user : activeUsers) {
+            QCAlert alert = new QCAlert();
+            alert.setId(UUID.randomUUID().toString());
+            alert.setViolationId(violation.getId());
+            alert.setAlertType(ALERT_TYPE_VIOLATION);
+            alert.setSentDateTime(now);
+            alert.setReadStatus(false);
+            alert.setMessageSubject(subject);
+            alert.setMessageBody(body);
+            alert.setRecipientUserId(Integer.valueOf(user.getId()));
+            alert.setSysUserId(user.getId());
+            alert.setSystemUserId(Integer.valueOf(user.getId()));
 
-        LogEvent.logInfo(this.getClass().getName(), "createAlertForViolation",
-                "Created alert " + alert.getId() + " for violation " + violation.getId());
+            alertDAO.insert(alert);
+            createdAlerts.add(alert);
 
-        return alert;
+            // Also create an in-app notification so the Header bell badge lights up
+            try {
+                Notification notification = new Notification();
+                notification.setMessage(subject);
+                notification.setCreatedDate(OffsetDateTime.now());
+                notification.setReadAt(null);
+                notification.setUser(user);
+                notificationDAO.save(notification);
+            } catch (Exception e) {
+                LogEvent.logError(this.getClass().getName(), "createAlertsForViolation",
+                        "Failed to create notification for user " + user.getId() + ": " + e.getMessage());
+            }
+        }
+
+        LogEvent.logInfo(this.getClass().getName(), "createAlertsForViolation",
+                "Created " + createdAlerts.size() + " alerts for violation " + violation.getId());
+
+        return createdAlerts;
+    }
+
+    private List<SystemUser> getActiveUsers() {
+        List<SystemUser> allUsers = systemUserService.getAllSystemUsers();
+        List<SystemUser> active = new ArrayList<>();
+        for (SystemUser user : allUsers) {
+            if ("Y".equals(user.getIsActive())) {
+                active.add(user);
+            }
+        }
+        return active;
     }
 
     @Override

@@ -97,3 +97,5 @@ cypress-videos/
 specs/*/research/AnalyzerDocs/
 
 # Miscellaneous dev artifacts
+.playwright-mcp/
+META-INF/

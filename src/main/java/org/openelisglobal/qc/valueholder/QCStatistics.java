@@ -51,6 +51,9 @@ public class QCStatistics extends BaseObject<String> {
     @Column(name = "validity_end")
     private Timestamp validityEnd;
 
+    @Column(name = "sys_user_id", nullable = false)
+    private Integer systemUserId;
+
     public QCStatistics() {
     }
 
@@ -126,5 +129,13 @@ public class QCStatistics extends BaseObject<String> {
 
     public void setValidityEnd(Timestamp validityEnd) {
         this.validityEnd = validityEnd;
+    }
+
+    public Integer getSystemUserId() {
+        return systemUserId;
+    }
+
+    public void setSystemUserId(Integer systemUserId) {
+        this.systemUserId = systemUserId;
     }
 }

@@ -13,14 +13,18 @@ import org.openelisglobal.qc.valueholder.QCRuleViolation;
 public interface QCAlertService {
 
     /**
-     * Create an alert for a rule violation. For REJECTION severity, alerts are sent
-     * immediately. For WARNING severity, alerts may be batched (max 1 per 15
-     * minutes per test/instrument).
+     * Create alerts for a rule violation, one per active system user. For REJECTION
+     * severity, alerts are sent immediately. For WARNING severity, alerts may be
+     * batched (max 1 per 15 minutes per test/instrument).
      *
-     * @param violation The rule violation to create an alert for
-     * @return The created alert, or null if batched/suppressed
+     * <p>
+     * TODO: Make recipient selection configurable (e.g., by role or instrument
+     * assignment) instead of broadcasting to all active users.
+     *
+     * @param violation The rule violation to create alerts for
+     * @return The created alerts, or empty list if batched/suppressed
      */
-    QCAlert createAlertForViolation(QCRuleViolation violation);
+    List<QCAlert> createAlertsForViolation(QCRuleViolation violation);
 
     /**
      * Get all alerts for a specific user.

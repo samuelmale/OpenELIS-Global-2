@@ -123,7 +123,7 @@ const RuleConfigPanel = () => {
       ...rule,
       enabled: rule.defaultEnabled,
       severity: rule.defaultSeverity,
-    }))
+    })),
   );
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -170,13 +170,19 @@ const RuleConfigPanel = () => {
             // Merge API config with defaults
             setRuleConfigs(
               DEFAULT_RULES.map((defaultRule) => {
-                const apiConfig = configs.find((c) => c.ruleCode === defaultRule.code);
+                const apiConfig = configs.find(
+                  (c) => c.ruleCode === defaultRule.code,
+                );
                 return {
                   ...defaultRule,
-                  enabled: apiConfig ? apiConfig.enabled : defaultRule.defaultEnabled,
-                  severity: apiConfig ? apiConfig.severity : defaultRule.defaultSeverity,
+                  enabled: apiConfig
+                    ? apiConfig.enabled
+                    : defaultRule.defaultEnabled,
+                  severity: apiConfig
+                    ? apiConfig.severity
+                    : defaultRule.defaultSeverity,
                 };
-              })
+              }),
             );
           } else {
             // Use defaults
@@ -185,13 +191,13 @@ const RuleConfigPanel = () => {
                 ...rule,
                 enabled: rule.defaultEnabled,
                 severity: rule.defaultSeverity,
-              }))
+              })),
             );
           }
         }
         setLoading(false);
         setHasChanges(false);
-      }
+      },
     );
   }, [selectedAnalyzer, selectedTest]);
 
@@ -224,8 +230,8 @@ const RuleConfigPanel = () => {
   const handleRuleToggle = (ruleCode, enabled) => {
     setRuleConfigs((prev) =>
       prev.map((rule) =>
-        rule.code === ruleCode ? { ...rule, enabled } : rule
-      )
+        rule.code === ruleCode ? { ...rule, enabled } : rule,
+      ),
     );
     setHasChanges(true);
   };
@@ -234,8 +240,8 @@ const RuleConfigPanel = () => {
   const handleSeverityChange = (ruleCode, severity) => {
     setRuleConfigs((prev) =>
       prev.map((rule) =>
-        rule.code === ruleCode ? { ...rule, severity } : rule
-      )
+        rule.code === ruleCode ? { ...rule, severity } : rule,
+      ),
     );
     setHasChanges(true);
   };
@@ -243,7 +249,9 @@ const RuleConfigPanel = () => {
   // Handle save (FR-017)
   const handleSave = () => {
     if (!selectedAnalyzer || !selectedTest) {
-      setError(intl.formatMessage({ id: "qc.ruleConfig.error.selectAnalyzerTest" }));
+      setError(
+        intl.formatMessage({ id: "qc.ruleConfig.error.selectAnalyzerTest" }),
+      );
       return;
     }
 
@@ -269,10 +277,12 @@ const RuleConfigPanel = () => {
           setSuccess(intl.formatMessage({ id: "qc.ruleConfig.success.saved" }));
           setHasChanges(false);
         } else {
-          setError(intl.formatMessage({ id: "qc.ruleConfig.error.saveFailed" }));
+          setError(
+            intl.formatMessage({ id: "qc.ruleConfig.error.saveFailed" }),
+          );
         }
         setSaving(false);
-      }
+      },
     );
   };
 
@@ -283,7 +293,7 @@ const RuleConfigPanel = () => {
         ...rule,
         enabled: rule.defaultEnabled,
         severity: rule.defaultSeverity,
-      }))
+      })),
     );
     setHasChanges(true);
   };
@@ -295,7 +305,10 @@ const RuleConfigPanel = () => {
   return (
     <div className="rule-config-panel" data-testid="rule-config-panel">
       {/* Header */}
-      <div className="rule-config-panel-header" data-testid="rule-config-panel-header">
+      <div
+        className="rule-config-panel-header"
+        data-testid="rule-config-panel-header"
+      >
         <PageTitle
           breadcrumbs={[
             {
@@ -304,7 +317,7 @@ const RuleConfigPanel = () => {
             },
             {
               label: intl.formatMessage({ id: "qc.dashboard.title" }),
-              link: "/analyzers/qc",
+              link: "/analyzers/qc/db",
             },
             {
               label: intl.formatMessage({ id: "qc.ruleConfig.title" }),
@@ -335,12 +348,19 @@ const RuleConfigPanel = () => {
       )}
 
       {/* Analyzer/Test Selection */}
-      <Grid className="rule-config-panel-selectors" data-testid="rule-config-selectors">
+      <Grid
+        className="rule-config-panel-selectors"
+        data-testid="rule-config-selectors"
+      >
         <Column lg={6} md={4} sm={4}>
           <Dropdown
             id="analyzer-selector"
-            titleText={intl.formatMessage({ id: "qc.ruleConfig.field.analyzer" })}
-            label={intl.formatMessage({ id: "qc.ruleConfig.field.selectAnalyzer" })}
+            titleText={intl.formatMessage({
+              id: "qc.ruleConfig.field.analyzer",
+            })}
+            label={intl.formatMessage({
+              id: "qc.ruleConfig.field.selectAnalyzer",
+            })}
             items={analyzers}
             itemToString={(item) => item?.name || ""}
             selectedItem={analyzers.find((a) => a.id === selectedAnalyzer)}
@@ -365,7 +385,10 @@ const RuleConfigPanel = () => {
 
       {/* Loading state */}
       {loading && selectedAnalyzer && selectedTest && (
-        <div className="rule-config-panel-loading" data-testid="rule-config-loading">
+        <div
+          className="rule-config-panel-loading"
+          data-testid="rule-config-loading"
+        >
           <Loading
             description={intl.formatMessage({ id: "qc.ruleConfig.loading" })}
             withOverlay={false}
@@ -376,14 +399,22 @@ const RuleConfigPanel = () => {
       {/* Rule Configuration */}
       {!loading && selectedAnalyzer && selectedTest && (
         <>
-          <Accordion className="rule-config-panel-accordion" data-testid="rule-config-accordion">
+          <Accordion
+            className="rule-config-panel-accordion"
+            data-testid="rule-config-accordion"
+          >
             {/* Rejection Rules */}
             <AccordionItem
               title={
                 <div className="rule-config-category-title">
-                  <span>{intl.formatMessage({ id: "qc.ruleConfig.category.rejection" })}</span>
+                  <span>
+                    {intl.formatMessage({
+                      id: "qc.ruleConfig.category.rejection",
+                    })}
+                  </span>
                   <span className="rule-config-category-count">
-                    ({rejectionRules.filter((r) => r.enabled).length}/{rejectionRules.length})
+                    ({rejectionRules.filter((r) => r.enabled).length}/
+                    {rejectionRules.length})
                   </span>
                 </div>
               }
@@ -400,7 +431,9 @@ const RuleConfigPanel = () => {
                     <div className="rule-config-item-info">
                       <span className="rule-config-item-name">{rule.name}</span>
                       <span className="rule-config-item-description">
-                        {intl.formatMessage({ id: `qc.rules.${rule.code}.description` })}
+                        {intl.formatMessage({
+                          id: `qc.rules.${rule.code}.description`,
+                        })}
                       </span>
                     </div>
                     <Toggle
@@ -408,7 +441,9 @@ const RuleConfigPanel = () => {
                       labelA=""
                       labelB=""
                       toggled={rule.enabled}
-                      onToggle={(checked) => handleRuleToggle(rule.code, checked)}
+                      onToggle={(checked) =>
+                        handleRuleToggle(rule.code, checked)
+                      }
                       data-testid={`rule-toggle-${rule.code}`}
                     />
                   </div>
@@ -416,21 +451,29 @@ const RuleConfigPanel = () => {
                     <div className="rule-config-item-severity">
                       <RadioButtonGroup
                         name={`severity-${rule.code}`}
-                        legendText={intl.formatMessage({ id: "qc.ruleConfig.field.severity" })}
+                        legendText={intl.formatMessage({
+                          id: "qc.ruleConfig.field.severity",
+                        })}
                         valueSelected={rule.severity}
-                        onChange={(value) => handleSeverityChange(rule.code, value)}
+                        onChange={(value) =>
+                          handleSeverityChange(rule.code, value)
+                        }
                         orientation="horizontal"
                         data-testid={`rule-severity-${rule.code}`}
                       >
                         <RadioButton
                           id={`${rule.code}-warning`}
                           value="WARNING"
-                          labelText={intl.formatMessage({ id: "qc.ruleConfig.severity.warning" })}
+                          labelText={intl.formatMessage({
+                            id: "qc.ruleConfig.severity.warning",
+                          })}
                         />
                         <RadioButton
                           id={`${rule.code}-rejection`}
                           value="REJECTION"
-                          labelText={intl.formatMessage({ id: "qc.ruleConfig.severity.rejection" })}
+                          labelText={intl.formatMessage({
+                            id: "qc.ruleConfig.severity.rejection",
+                          })}
                         />
                       </RadioButtonGroup>
                     </div>
@@ -443,9 +486,14 @@ const RuleConfigPanel = () => {
             <AccordionItem
               title={
                 <div className="rule-config-category-title">
-                  <span>{intl.formatMessage({ id: "qc.ruleConfig.category.warning" })}</span>
+                  <span>
+                    {intl.formatMessage({
+                      id: "qc.ruleConfig.category.warning",
+                    })}
+                  </span>
                   <span className="rule-config-category-count">
-                    ({warningRules.filter((r) => r.enabled).length}/{warningRules.length})
+                    ({warningRules.filter((r) => r.enabled).length}/
+                    {warningRules.length})
                   </span>
                 </div>
               }
@@ -461,7 +509,9 @@ const RuleConfigPanel = () => {
                     <div className="rule-config-item-info">
                       <span className="rule-config-item-name">{rule.name}</span>
                       <span className="rule-config-item-description">
-                        {intl.formatMessage({ id: `qc.rules.${rule.code}.description` })}
+                        {intl.formatMessage({
+                          id: `qc.rules.${rule.code}.description`,
+                        })}
                       </span>
                     </div>
                     <Toggle
@@ -469,7 +519,9 @@ const RuleConfigPanel = () => {
                       labelA=""
                       labelB=""
                       toggled={rule.enabled}
-                      onToggle={(checked) => handleRuleToggle(rule.code, checked)}
+                      onToggle={(checked) =>
+                        handleRuleToggle(rule.code, checked)
+                      }
                       data-testid={`rule-toggle-${rule.code}`}
                     />
                   </div>
@@ -477,21 +529,29 @@ const RuleConfigPanel = () => {
                     <div className="rule-config-item-severity">
                       <RadioButtonGroup
                         name={`severity-${rule.code}`}
-                        legendText={intl.formatMessage({ id: "qc.ruleConfig.field.severity" })}
+                        legendText={intl.formatMessage({
+                          id: "qc.ruleConfig.field.severity",
+                        })}
                         valueSelected={rule.severity}
-                        onChange={(value) => handleSeverityChange(rule.code, value)}
+                        onChange={(value) =>
+                          handleSeverityChange(rule.code, value)
+                        }
                         orientation="horizontal"
                         data-testid={`rule-severity-${rule.code}`}
                       >
                         <RadioButton
                           id={`${rule.code}-warning`}
                           value="WARNING"
-                          labelText={intl.formatMessage({ id: "qc.ruleConfig.severity.warning" })}
+                          labelText={intl.formatMessage({
+                            id: "qc.ruleConfig.severity.warning",
+                          })}
                         />
                         <RadioButton
                           id={`${rule.code}-rejection`}
                           value="REJECTION"
-                          labelText={intl.formatMessage({ id: "qc.ruleConfig.severity.rejection" })}
+                          labelText={intl.formatMessage({
+                            id: "qc.ruleConfig.severity.rejection",
+                          })}
                         />
                       </RadioButtonGroup>
                     </div>
@@ -502,7 +562,10 @@ const RuleConfigPanel = () => {
           </Accordion>
 
           {/* Actions */}
-          <div className="rule-config-panel-actions" data-testid="rule-config-actions">
+          <div
+            className="rule-config-panel-actions"
+            data-testid="rule-config-actions"
+          >
             <Button
               kind="secondary"
               renderIcon={Reset}
@@ -528,8 +591,13 @@ const RuleConfigPanel = () => {
 
       {/* Prompt to select analyzer/test */}
       {!loading && (!selectedAnalyzer || !selectedTest) && (
-        <div className="rule-config-panel-prompt" data-testid="rule-config-prompt">
-          {intl.formatMessage({ id: "qc.ruleConfig.prompt.selectAnalyzerTest" })}
+        <div
+          className="rule-config-panel-prompt"
+          data-testid="rule-config-prompt"
+        >
+          {intl.formatMessage({
+            id: "qc.ruleConfig.prompt.selectAnalyzerTest",
+          })}
         </div>
       )}
     </div>

@@ -70,6 +70,9 @@ public class QCControlLot extends BaseObject<String> {
     @Column(name = "status", nullable = false, length = 50)
     private String status = "ESTABLISHMENT";
 
+    @Column(name = "sys_user_id", nullable = false)
+    private Integer systemUserId;
+
     @PrePersist
     protected void onCreate() {
         if (fhirUuid == null) {
@@ -200,5 +203,13 @@ public class QCControlLot extends BaseObject<String> {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Integer getSystemUserId() {
+        return systemUserId;
+    }
+
+    public void setSystemUserId(Integer systemUserId) {
+        this.systemUserId = systemUserId;
     }
 }

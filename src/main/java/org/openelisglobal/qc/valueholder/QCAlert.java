@@ -50,6 +50,10 @@ public class QCAlert extends BaseObject<String> {
     @Column(name = "message_body", columnDefinition = "TEXT")
     private String messageBody;
 
+    @NotNull
+    @Column(name = "sys_user_id", nullable = false)
+    private Integer systemUserId;
+
     public QCAlert() {
     }
 
@@ -133,5 +137,13 @@ public class QCAlert extends BaseObject<String> {
 
     public void setMessageBody(String messageBody) {
         this.messageBody = messageBody;
+    }
+
+    public Integer getSystemUserId() {
+        return systemUserId;
+    }
+
+    public void setSystemUserId(Integer systemUserId) {
+        this.systemUserId = systemUserId;
     }
 }

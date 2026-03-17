@@ -19,121 +19,157 @@ import PropTypes from "prop-types";
 import "@carbon/charts/styles.css";
 import "./LeveyJenningsChart.css";
 
-const LeveyJenningsChart = ({
-  data,
-  statistics,
-  height,
-  showLegend,
-}) => {
+const LeveyJenningsChart = ({ data, statistics, height, showLegend }) => {
   const intl = useIntl();
 
-  // Default statistics if not provided
-  const mean = statistics?.mean || 0;
-  const sd = statistics?.standardDeviation || 1;
-
-  // Transform data for Carbon Charts
+  // Transform data for Carbon Charts — plot z-scores on Y-axis
+  // All points go into the Normal group for a continuous line.
+  // Violation points are duplicated into the Violation group so red dots
+  // render on top, keeping the line unbroken.
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return [];
 
-    return data.map((point) => ({
-      group: point.violated
-        ? intl.formatMessage({ id: "qc.chart.legend.violation" })
-        : intl.formatMessage({ id: "qc.chart.legend.normal" }),
-      date: new Date(point.runDateTime || point.date),
-      value: point.resultValue || point.value,
-      // Store additional data for tooltip
-      zScore: point.zScore,
-      violations: point.violations || [],
-      resultId: point.id,
-    }));
+    const filtered = data.filter((point) => point.zScore != null);
+    const normalLabel = intl.formatMessage({ id: "qc.chart.legend.normal" });
+    const violationLabel = intl.formatMessage({
+      id: "qc.chart.legend.violation",
+    });
+
+    const points = [];
+
+    filtered.forEach((point) => {
+      const mapped = {
+        date: new Date(point.runDateTime || point.date),
+        value: point.zScore,
+        rawValue: point.resultValue || point.value,
+        zScore: point.zScore,
+        violations: point.violations || [],
+        resultId: point.id,
+      };
+
+      // Every point in Normal group for continuous line
+      points.push({ ...mapped, group: normalLabel });
+
+      // Violation points also in Violation group for red dot overlay
+      if (point.violated) {
+        points.push({ ...mapped, group: violationLabel });
+      }
+    });
+
+    return points;
   }, [data, intl]);
 
-  // Reference lines for SD levels
+  // Dynamic Y-axis domain: minimum [-4, 4], expands for outliers
+  const yDomain = useMemo(() => {
+    if (!data || data.length === 0) return [-4, 4];
+    const zScores = data
+      .filter((p) => p.zScore != null)
+      .map((p) => p.zScore);
+    if (zScores.length === 0) return [-4, 4];
+    const minZ = Math.min(...zScores);
+    const maxZ = Math.max(...zScores);
+    return [
+      Math.min(-4, Math.floor(minZ - 0.5)),
+      Math.max(4, Math.ceil(maxZ + 0.5)),
+    ];
+  }, [data]);
+
+  // Reference lines at fixed z-score positions (placed inside axes.left.thresholds)
   const referenceLines = useMemo(() => {
     return [
-      { value: mean, label: intl.formatMessage({ id: "qc.chart.mean" }), type: "mean" },
-      { value: mean + sd, label: "+1SD", type: "sd1" },
-      { value: mean - sd, label: "-1SD", type: "sd1" },
-      { value: mean + 2 * sd, label: "+2SD", type: "sd2" },
-      { value: mean - 2 * sd, label: "-2SD", type: "sd2" },
-      { value: mean + 3 * sd, label: "+3SD", type: "sd3" },
-      { value: mean - 3 * sd, label: "-3SD", type: "sd3" },
+      {
+        value: 0,
+        label: intl.formatMessage({ id: "qc.chart.mean" }),
+        fillColor: "#161616",
+      },
+      { value: 1, label: "+1\u03C3", fillColor: "#a8a8a8" },
+      { value: -1, label: "-1\u03C3", fillColor: "#a8a8a8" },
+      { value: 2, label: "+2\u03C3", fillColor: "#f1c21b" },
+      { value: -2, label: "-2\u03C3", fillColor: "#f1c21b" },
+      { value: 3, label: "+3\u03C3", fillColor: "#da1e28" },
+      { value: -3, label: "-3\u03C3", fillColor: "#da1e28" },
     ];
-  }, [mean, sd, intl]);
+  }, [intl]);
 
   // Chart options
-  const options = useMemo(() => ({
-    title: "",
-    height: height || "400px",
-    axes: {
-      bottom: {
-        title: intl.formatMessage({ id: "qc.chart.axis.date" }),
-        mapsTo: "date",
-        scaleType: "time",
+  const options = useMemo(
+    () => ({
+      title: "",
+      height: height || "400px",
+      axes: {
+        bottom: {
+          title: intl.formatMessage({ id: "qc.chart.axis.date" }),
+          mapsTo: "date",
+          scaleType: "time",
+        },
+        left: {
+          title: intl.formatMessage({ id: "qc.chart.axis.value" }),
+          mapsTo: "value",
+          scaleType: "linear",
+          includeZero: true,
+          domain: yDomain,
+          thresholds: referenceLines,
+        },
       },
-      left: {
-        title: intl.formatMessage({ id: "qc.chart.axis.value" }),
-        mapsTo: "value",
-        scaleType: "linear",
-        includeZero: false,
+      points: {
+        radius: 5,
+        filled: true,
       },
-    },
-    points: {
-      radius: 5,
-      filled: true,
-    },
-    color: {
-      scale: {
-        [intl.formatMessage({ id: "qc.chart.legend.normal" })]: "#0f62fe", // Carbon blue
-        [intl.formatMessage({ id: "qc.chart.legend.violation" })]: "#da1e28", // Carbon red
+      color: {
+        scale: {
+          [intl.formatMessage({ id: "qc.chart.legend.normal" })]: "#0f62fe", // Carbon blue
+          [intl.formatMessage({ id: "qc.chart.legend.violation" })]: "#da1e28", // Carbon red
+        },
       },
-    },
-    legend: {
-      enabled: showLegend,
-      position: "bottom",
-    },
-    tooltip: {
-      enabled: true,
-      showTotal: false,
-      customHTML: (datapoint) => {
-        if (!datapoint || !datapoint[0]) return "";
+      legend: {
+        enabled: showLegend,
+        position: "bottom",
+      },
+      tooltip: {
+        enabled: true,
+        showTotal: false,
+        customHTML: (datapoint) => {
+          if (!datapoint || !datapoint[0]) return "";
 
-        const point = datapoint[0];
-        const originalData = data.find(d =>
-          new Date(d.runDateTime || d.date).getTime() === point.date?.getTime()
-        );
+          const point = datapoint[0];
+          const originalData = data.find(
+            (d) =>
+              new Date(d.runDateTime || d.date).getTime() ===
+              point.date?.getTime(),
+          );
 
-        const dateStr = point.date
-          ? intl.formatDate(point.date, {
-              year: "numeric",
-              month: "2-digit",
-              day: "2-digit",
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          : "-";
+          const dateStr = point.date
+            ? intl.formatDate(point.date, {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "-";
 
-        const zScore = originalData?.zScore !== undefined
-          ? originalData.zScore.toFixed(2)
-          : "-";
+          const rawValue = originalData?.resultValue || originalData?.value;
+          const zScoreStr =
+            point.value != null ? point.value.toFixed(2) + "\u03C3" : "-";
 
-        const violations = originalData?.violations || [];
-        const violationsHtml = violations.length > 0
-          ? `<div class="lj-tooltip-violations">
+          const violations = originalData?.violations || [];
+          const violationsHtml =
+            violations.length > 0
+              ? `<div class="lj-tooltip-violations">
                <strong>${intl.formatMessage({ id: "qc.chart.tooltip.violations" })}:</strong>
-               ${violations.map(v => `<span class="lj-tooltip-violation-tag">${v.code || v}</span>`).join(" ")}
+               ${violations.map((v) => `<span class="lj-tooltip-violation-tag">${v.code || v}</span>`).join(" ")}
              </div>`
-          : "";
+              : "";
 
-        return `
+          return `
           <div class="lj-tooltip">
             <div class="lj-tooltip-row">
               <strong>${intl.formatMessage({ id: "qc.chart.tooltip.value" })}:</strong>
-              <span>${point.value?.toFixed(2) || "-"}</span>
+              <span>${rawValue != null ? Number(rawValue).toFixed(2) : "-"}</span>
             </div>
             <div class="lj-tooltip-row">
               <strong>${intl.formatMessage({ id: "qc.chart.tooltip.zScore" })}:</strong>
-              <span>${zScore}</span>
+              <span>${zScoreStr}</span>
             </div>
             <div class="lj-tooltip-row">
               <strong>${intl.formatMessage({ id: "qc.chart.tooltip.date" })}:</strong>
@@ -142,31 +178,21 @@ const LeveyJenningsChart = ({
             ${violationsHtml}
           </div>
         `;
+        },
       },
-    },
-    // Reference lines for SD levels (FR-053)
-    grid: {
-      y: {
-        enabled: true,
+      // Reference lines for SD levels (FR-053)
+      grid: {
+        y: {
+          enabled: true,
+        },
       },
-    },
-    // Threshold lines (displayed as horizontal grid lines)
-    thresholds: referenceLines.map((line) => ({
-      value: line.value,
-      label: line.label,
-      fillColor: line.type === "mean"
-        ? "#161616" // Black for mean
-        : line.type === "sd1"
-          ? "#6fdc8c" // Green for ±1SD
-          : line.type === "sd2"
-            ? "#f1c21b" // Yellow for ±2SD
-            : "#da1e28", // Red for ±3SD
-    })),
-    curve: "curveMonotoneX",
-    data: {
-      loading: false,
-    },
-  }), [height, intl, showLegend, referenceLines, data]);
+      curve: "curveMonotoneX",
+      data: {
+        loading: false,
+      },
+    }),
+    [height, intl, showLegend, referenceLines, data, yDomain],
+  );
 
   // Empty state
   if (!data || data.length === 0) {
@@ -179,28 +205,25 @@ const LeveyJenningsChart = ({
 
   return (
     <div className="lj-chart-container" data-testid="lj-chart">
-      <LineChart
-        data={chartData}
-        options={options}
-      />
+      <LineChart data={chartData} options={options} />
 
       {/* Legend for reference lines */}
       <div className="lj-chart-legend" data-testid="lj-chart-legend">
         <div className="lj-chart-legend-item">
           <span className="lj-chart-legend-line lj-chart-legend-line--mean" />
-          <span>{intl.formatMessage({ id: "qc.chart.mean" })}: {mean.toFixed(2)}</span>
+          <span>{intl.formatMessage({ id: "qc.chart.mean" })}</span>
         </div>
         <div className="lj-chart-legend-item">
           <span className="lj-chart-legend-line lj-chart-legend-line--sd1" />
-          <span>±1SD: {sd.toFixed(2)}</span>
+          <span>&plusmn;1&sigma;</span>
         </div>
         <div className="lj-chart-legend-item">
           <span className="lj-chart-legend-line lj-chart-legend-line--sd2" />
-          <span>±2SD: {(2 * sd).toFixed(2)}</span>
+          <span>&plusmn;2&sigma;</span>
         </div>
         <div className="lj-chart-legend-item">
           <span className="lj-chart-legend-line lj-chart-legend-line--sd3" />
-          <span>±3SD: {(3 * sd).toFixed(2)}</span>
+          <span>&plusmn;3&sigma;</span>
         </div>
       </div>
     </div>
@@ -224,9 +247,9 @@ LeveyJenningsChart.propTypes = {
             code: PropTypes.string,
             severity: PropTypes.string,
           }),
-        ])
+        ]),
       ),
-    })
+    }),
   ),
   statistics: PropTypes.shape({
     mean: PropTypes.number,

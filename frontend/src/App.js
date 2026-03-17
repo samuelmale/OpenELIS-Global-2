@@ -13,10 +13,8 @@ import ErrorDashboardPage from "./pages/ErrorDashboardPage";
 import CustomFieldTypeManagementPage from "./pages/CustomFieldTypeManagementPage";
 import {
   QCDashboard,
-  ViolationList,
-  CorrectiveActionList,
-  CorrectiveActionForm,
   ControlChartDetail,
+  ControlLotList,
   ControlLotSetup,
   RuleConfigPanel,
 } from "./components/qc";
@@ -548,39 +546,21 @@ export default function App() {
                   role={Roles.GLOBAL_ADMIN}
                 />
                 <SecureRoute
-                  path="/analyzers/qc"
+                  path="/analyzers/qc/db"
                   exact
                   component={() => <QCDashboard />}
-                  role={Roles.LAB_SUPERVISOR}
-                />
-                <SecureRoute
-                  path="/analyzers/qc/alerts"
-                  exact
-                  component={() => <ViolationList />}
-                  role={Roles.LAB_SUPERVISOR}
-                />
-                <SecureRoute
-                  path="/analyzers/qc/corrective-actions"
-                  exact
-                  component={() => <CorrectiveActionList />}
-                  role={Roles.LAB_SUPERVISOR}
-                />
-                <SecureRoute
-                  path="/analyzers/qc/corrective-actions/new"
-                  exact
-                  component={() => <CorrectiveActionForm />}
-                  role={Roles.LAB_SUPERVISOR}
-                />
-                <SecureRoute
-                  path="/analyzers/qc/corrective-actions/:id"
-                  exact
-                  component={() => <CorrectiveActionForm />}
                   role={Roles.LAB_SUPERVISOR}
                 />
                 <SecureRoute
                   path="/analyzers/qc/charts/:analyzerId"
                   exact
                   component={() => <ControlChartDetail />}
+                  role={Roles.LAB_SUPERVISOR}
+                />
+                <SecureRoute
+                  path="/analyzers/qc/control-lots"
+                  exact
+                  component={() => <ControlLotList />}
                   role={Roles.LAB_SUPERVISOR}
                 />
                 <SecureRoute

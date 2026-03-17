@@ -7,7 +7,6 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import java.sql.Timestamp;
 import org.openelisglobal.common.form.BaseForm;
-import org.openelisglobal.common.validator.ValidationHelper;
 import org.openelisglobal.qc.valueholder.QCControlLot;
 import org.openelisglobal.validation.annotations.SafeHtml;
 
@@ -17,7 +16,7 @@ import org.openelisglobal.validation.annotations.SafeHtml;
  */
 public class QCControlLotForm extends BaseForm {
 
-    @Pattern(regexp = ValidationHelper.ID_REGEX)
+    @Pattern(regexp = "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})?$")
     private String id = "";
 
     @NotBlank
@@ -36,12 +35,12 @@ public class QCControlLotForm extends BaseForm {
     private String controlLevel = "";
 
     @NotNull
-    @Pattern(regexp = ValidationHelper.ID_REGEX)
-    private String testId = "";
+    @Positive
+    private Integer testId;
 
     @NotNull
-    @Pattern(regexp = ValidationHelper.ID_REGEX)
-    private String instrumentId = "";
+    @Positive
+    private Integer instrumentId;
 
     @NotBlank
     @SafeHtml(level = SafeHtml.SafeListLevel.NONE)
@@ -121,19 +120,19 @@ public class QCControlLotForm extends BaseForm {
         this.controlLevel = controlLevel;
     }
 
-    public String getTestId() {
+    public Integer getTestId() {
         return testId;
     }
 
-    public void setTestId(String testId) {
+    public void setTestId(Integer testId) {
         this.testId = testId;
     }
 
-    public String getInstrumentId() {
+    public Integer getInstrumentId() {
         return instrumentId;
     }
 
-    public void setInstrumentId(String instrumentId) {
+    public void setInstrumentId(Integer instrumentId) {
         this.instrumentId = instrumentId;
     }
 

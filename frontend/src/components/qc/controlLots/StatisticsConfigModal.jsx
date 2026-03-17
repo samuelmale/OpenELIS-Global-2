@@ -62,7 +62,9 @@ const StatisticsConfigModal = ({ open, config, onClose, onSave }) => {
     onSave({
       ...localConfig,
       mean: localConfig.mean ? parseFloat(localConfig.mean) : null,
-      standardDeviation: localConfig.standardDeviation ? parseFloat(localConfig.standardDeviation) : null,
+      standardDeviation: localConfig.standardDeviation
+        ? parseFloat(localConfig.standardDeviation)
+        : null,
     });
   };
 
@@ -72,10 +74,16 @@ const StatisticsConfigModal = ({ open, config, onClose, onSave }) => {
       return localConfig.mean && localConfig.standardDeviation;
     }
     if (localConfig.calculationMethod === "ROLLING") {
-      return localConfig.rollingWindowSize >= 10 && localConfig.rollingWindowSize <= 100;
+      return (
+        localConfig.rollingWindowSize >= 10 &&
+        localConfig.rollingWindowSize <= 100
+      );
     }
     if (localConfig.calculationMethod === "INITIAL_RUNS") {
-      return localConfig.initialRunsRequired >= 10 && localConfig.initialRunsRequired <= 50;
+      return (
+        localConfig.initialRunsRequired >= 10 &&
+        localConfig.initialRunsRequired <= 50
+      );
     }
     return true;
   };
@@ -88,13 +96,21 @@ const StatisticsConfigModal = ({ open, config, onClose, onSave }) => {
       data-testid="statistics-config-modal"
     >
       <ModalHeader
-        title={intl.formatMessage({ id: "qc.controlLot.statistics.config.title" })}
-        label={intl.formatMessage({ id: "qc.controlLot.statistics.config.label" })}
+        title={intl.formatMessage({
+          id: "qc.controlLot.statistics.config.title",
+        })}
+        label={intl.formatMessage({
+          id: "qc.controlLot.statistics.config.label",
+        })}
         data-testid="statistics-config-modal-header"
       />
       <ModalBody data-testid="statistics-config-modal-body">
         {/* Calculation Method Selection (FR-003) */}
-        <FormGroup legendText={intl.formatMessage({ id: "qc.controlLot.statistics.method" })}>
+        <FormGroup
+          legendText={intl.formatMessage({
+            id: "qc.controlLot.statistics.method",
+          })}
+        >
           <RadioButtonGroup
             name="calculation-method"
             valueSelected={localConfig.calculationMethod}
@@ -108,10 +124,14 @@ const StatisticsConfigModal = ({ open, config, onClose, onSave }) => {
               labelText={
                 <div className="method-option">
                   <span className="method-option-label">
-                    {intl.formatMessage({ id: "qc.controlLot.statistics.method.manufacturer_fixed" })}
+                    {intl.formatMessage({
+                      id: "qc.controlLot.statistics.method.manufacturer_fixed",
+                    })}
                   </span>
                   <span className="method-option-description">
-                    {intl.formatMessage({ id: "qc.controlLot.statistics.method.manufacturer_fixed.description" })}
+                    {intl.formatMessage({
+                      id: "qc.controlLot.statistics.method.manufacturer_fixed.description",
+                    })}
                   </span>
                 </div>
               }
@@ -123,10 +143,14 @@ const StatisticsConfigModal = ({ open, config, onClose, onSave }) => {
               labelText={
                 <div className="method-option">
                   <span className="method-option-label">
-                    {intl.formatMessage({ id: "qc.controlLot.statistics.method.rolling" })}
+                    {intl.formatMessage({
+                      id: "qc.controlLot.statistics.method.rolling",
+                    })}
                   </span>
                   <span className="method-option-description">
-                    {intl.formatMessage({ id: "qc.controlLot.statistics.method.rolling.description" })}
+                    {intl.formatMessage({
+                      id: "qc.controlLot.statistics.method.rolling.description",
+                    })}
                   </span>
                 </div>
               }
@@ -138,10 +162,14 @@ const StatisticsConfigModal = ({ open, config, onClose, onSave }) => {
               labelText={
                 <div className="method-option">
                   <span className="method-option-label">
-                    {intl.formatMessage({ id: "qc.controlLot.statistics.method.initial_runs" })}
+                    {intl.formatMessage({
+                      id: "qc.controlLot.statistics.method.initial_runs",
+                    })}
                   </span>
                   <span className="method-option-description">
-                    {intl.formatMessage({ id: "qc.controlLot.statistics.method.initial_runs.description" })}
+                    {intl.formatMessage({
+                      id: "qc.controlLot.statistics.method.initial_runs.description",
+                    })}
                   </span>
                 </div>
               }
@@ -152,12 +180,21 @@ const StatisticsConfigModal = ({ open, config, onClose, onSave }) => {
 
         {/* Manufacturer Fixed Options (FR-004) */}
         {localConfig.calculationMethod === "MANUFACTURER_FIXED" && (
-          <div className="statistics-config-options" data-testid="statistics-manufacturer-options">
-            <FormGroup legendText={intl.formatMessage({ id: "qc.controlLot.statistics.manufacturerValues" })}>
+          <div
+            className="statistics-config-options"
+            data-testid="statistics-manufacturer-options"
+          >
+            <FormGroup
+              legendText={intl.formatMessage({
+                id: "qc.controlLot.statistics.manufacturerValues",
+              })}
+            >
               <div className="statistics-config-inputs">
                 <TextInput
                   id="manufacturer-mean"
-                  labelText={intl.formatMessage({ id: "qc.controlLot.statistics.mean" })}
+                  labelText={intl.formatMessage({
+                    id: "qc.controlLot.statistics.mean",
+                  })}
                   placeholder="0.00"
                   value={localConfig.mean}
                   onChange={(e) => handleNumericChange("mean", e.target.value)}
@@ -167,10 +204,14 @@ const StatisticsConfigModal = ({ open, config, onClose, onSave }) => {
                 />
                 <TextInput
                   id="manufacturer-sd"
-                  labelText={intl.formatMessage({ id: "qc.controlLot.statistics.sd" })}
+                  labelText={intl.formatMessage({
+                    id: "qc.controlLot.statistics.sd",
+                  })}
                   placeholder="0.00"
                   value={localConfig.standardDeviation}
-                  onChange={(e) => handleNumericChange("standardDeviation", e.target.value)}
+                  onChange={(e) =>
+                    handleNumericChange("standardDeviation", e.target.value)
+                  }
                   type="number"
                   step="0.01"
                   min="0"
@@ -183,17 +224,30 @@ const StatisticsConfigModal = ({ open, config, onClose, onSave }) => {
 
         {/* Rolling Window Options (FR-005) */}
         {localConfig.calculationMethod === "ROLLING" && (
-          <div className="statistics-config-options" data-testid="statistics-rolling-options">
-            <FormGroup legendText={intl.formatMessage({ id: "qc.controlLot.statistics.rollingConfig" })}>
+          <div
+            className="statistics-config-options"
+            data-testid="statistics-rolling-options"
+          >
+            <FormGroup
+              legendText={intl.formatMessage({
+                id: "qc.controlLot.statistics.rollingConfig",
+              })}
+            >
               <NumberInput
                 id="rolling-window-size"
-                label={intl.formatMessage({ id: "qc.controlLot.statistics.windowSize" })}
-                helperText={intl.formatMessage({ id: "qc.controlLot.statistics.windowSize.helper" })}
+                label={intl.formatMessage({
+                  id: "qc.controlLot.statistics.windowSize",
+                })}
+                helperText={intl.formatMessage({
+                  id: "qc.controlLot.statistics.windowSize.helper",
+                })}
                 min={10}
                 max={100}
                 step={5}
                 value={localConfig.rollingWindowSize}
-                onChange={(e, { value }) => handleNumericChange("rollingWindowSize", value)}
+                onChange={(e, { value }) =>
+                  handleNumericChange("rollingWindowSize", value)
+                }
                 data-testid="statistics-window-size-input"
               />
             </FormGroup>
@@ -202,17 +256,30 @@ const StatisticsConfigModal = ({ open, config, onClose, onSave }) => {
 
         {/* Initial Runs Options (FR-005) */}
         {localConfig.calculationMethod === "INITIAL_RUNS" && (
-          <div className="statistics-config-options" data-testid="statistics-initial-runs-options">
-            <FormGroup legendText={intl.formatMessage({ id: "qc.controlLot.statistics.initialRunsConfig" })}>
+          <div
+            className="statistics-config-options"
+            data-testid="statistics-initial-runs-options"
+          >
+            <FormGroup
+              legendText={intl.formatMessage({
+                id: "qc.controlLot.statistics.initialRunsConfig",
+              })}
+            >
               <NumberInput
                 id="initial-runs-required"
-                label={intl.formatMessage({ id: "qc.controlLot.statistics.initialRunsRequired" })}
-                helperText={intl.formatMessage({ id: "qc.controlLot.statistics.initialRunsRequired.helper" })}
+                label={intl.formatMessage({
+                  id: "qc.controlLot.statistics.initialRunsRequired",
+                })}
+                helperText={intl.formatMessage({
+                  id: "qc.controlLot.statistics.initialRunsRequired.helper",
+                })}
                 min={10}
                 max={50}
                 step={5}
                 value={localConfig.initialRunsRequired}
-                onChange={(e, { value }) => handleNumericChange("initialRunsRequired", value)}
+                onChange={(e, { value }) =>
+                  handleNumericChange("initialRunsRequired", value)
+                }
                 data-testid="statistics-initial-runs-input"
               />
             </FormGroup>
@@ -220,7 +287,11 @@ const StatisticsConfigModal = ({ open, config, onClose, onSave }) => {
         )}
       </ModalBody>
       <ModalFooter data-testid="statistics-config-modal-footer">
-        <Button kind="secondary" onClick={onClose} data-testid="statistics-config-cancel-button">
+        <Button
+          kind="secondary"
+          onClick={onClose}
+          data-testid="statistics-config-cancel-button"
+        >
           {intl.formatMessage({ id: "button.cancel" })}
         </Button>
         <Button
@@ -243,7 +314,10 @@ StatisticsConfigModal.propTypes = {
     rollingWindowSize: PropTypes.number,
     initialRunsRequired: PropTypes.number,
     mean: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-    standardDeviation: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+    standardDeviation: PropTypes.oneOfType([
+      PropTypes.number,
+      PropTypes.string,
+    ]),
   }),
   onClose: PropTypes.func.isRequired,
   onSave: PropTypes.func.isRequired,

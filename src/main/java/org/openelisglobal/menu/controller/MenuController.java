@@ -92,36 +92,36 @@ public class MenuController {
             MenuItem qcGroupItem = new MenuItem();
             qcGroupItem.setMenu(qcGroup);
 
-            // Child: QC Alerts & Violations
-            Menu qcAlerts = new Menu();
-            qcAlerts.setElementId("menu_analyzers_qc_alerts");
-            qcAlerts.setActionURL("/analyzers/qc/alerts");
-            qcAlerts.setDisplayKey("analyzer.navigation.qcAlerts");
-            qcAlerts.setToolTipKey("analyzer.navigation.qcAlerts");
-            qcAlerts.setPresentationOrder(1);
-            qcAlerts.setIsActive(true);
-            qcAlerts.setHideInOldUI(true);
-            qcAlerts.setParent(qcGroup);
+            // Child: QC Dashboard
+            Menu qcDashboard = new Menu();
+            qcDashboard.setElementId("menu_analyzers_qc_dashboard");
+            qcDashboard.setActionURL("/analyzers/qc/db");
+            qcDashboard.setDisplayKey("analyzer.navigation.qcDashboard");
+            qcDashboard.setToolTipKey("analyzer.navigation.qcDashboard");
+            qcDashboard.setPresentationOrder(1);
+            qcDashboard.setIsActive(true);
+            qcDashboard.setHideInOldUI(true);
+            qcDashboard.setParent(qcGroup);
 
-            MenuItem qcAlertsItem = new MenuItem();
-            qcAlertsItem.setMenu(qcAlerts);
+            MenuItem qcDashboardItem = new MenuItem();
+            qcDashboardItem.setMenu(qcDashboard);
 
-            // Child: Corrective Actions
-            Menu qcCorrective = new Menu();
-            qcCorrective.setElementId("menu_analyzers_qc_corrective_actions");
-            qcCorrective.setActionURL("/analyzers/qc/corrective-actions");
-            qcCorrective.setDisplayKey("analyzer.navigation.qcCorrectiveActions");
-            qcCorrective.setToolTipKey("analyzer.navigation.qcCorrectiveActions");
-            qcCorrective.setPresentationOrder(2);
-            qcCorrective.setIsActive(true);
-            qcCorrective.setHideInOldUI(true);
-            qcCorrective.setParent(qcGroup);
+            // Child: Control Lots
+            Menu qcControlLots = new Menu();
+            qcControlLots.setElementId("menu_analyzers_qc_control_lots");
+            qcControlLots.setActionURL("/analyzers/qc/control-lots");
+            qcControlLots.setDisplayKey("analyzer.navigation.qcControlLots");
+            qcControlLots.setToolTipKey("analyzer.navigation.qcControlLots");
+            qcControlLots.setPresentationOrder(4);
+            qcControlLots.setIsActive(true);
+            qcControlLots.setHideInOldUI(true);
+            qcControlLots.setParent(qcGroup);
 
-            MenuItem qcCorrectiveItem = new MenuItem();
-            qcCorrectiveItem.setMenu(qcCorrective);
+            MenuItem qcControlLotsItem = new MenuItem();
+            qcControlLotsItem.setMenu(qcControlLots);
 
-            qcGroupItem.getChildMenus().add(qcAlertsItem);
-            qcGroupItem.getChildMenus().add(qcCorrectiveItem);
+            qcGroupItem.getChildMenus().add(qcDashboardItem);
+            qcGroupItem.getChildMenus().add(qcControlLotsItem);
             qcGroupItem.sortChildren();
 
             analyzers.getChildMenus().add(qcGroupItem);

@@ -63,6 +63,10 @@ public class QCRuleViolationServiceImpl implements QCRuleViolationService {
             violation.setResolutionNotes("Detection: " + evalResult.getMessage());
         }
 
+        // Set system user ID for audit trail
+        violation.setSysUserId("1");
+        violation.setSystemUserId(1);
+
         // Persist the violation
         violationDAO.insert(violation);
 
@@ -71,7 +75,7 @@ public class QCRuleViolationServiceImpl implements QCRuleViolationService {
 
         // Trigger alert creation
         try {
-            alertService.createAlertForViolation(violation);
+            alertService.createAlertsForViolation(violation);
         } catch (Exception e) {
             // Log but don't fail - violation is still created
             LogEvent.logError(this.getClass().getName(), "createViolation",
@@ -85,6 +89,12 @@ public class QCRuleViolationServiceImpl implements QCRuleViolationService {
     @Transactional(readOnly = true)
     public QCRuleViolation getById(String id) {
         return violationDAO.get(id).orElse(null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<QCRuleViolation> findAll() {
+        return violationDAO.getAllOrdered("violationDateTime", true);
     }
 
     @Override
@@ -153,6 +163,7 @@ public class QCRuleViolationServiceImpl implements QCRuleViolationService {
         if (STATUS_UNRESOLVED.equals(violation.getResolutionStatus())) {
             violation.setResolutionStatus(STATUS_ACKNOWLEDGED);
             violation.setResolvedByUserId(userId);
+            violation.setResolvedDateTime(Timestamp.from(Instant.now()));
 
             String existingNotes = violation.getResolutionNotes();
             String ackNote = "Acknowledged by user " + userId + " at " + Instant.now();

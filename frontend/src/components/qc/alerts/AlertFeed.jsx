@@ -13,12 +13,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  ClickableTile,
-  Button,
-  Tag,
-  InlineNotification,
-} from "@carbon/react";
+import { ClickableTile, Button, Tag, InlineNotification } from "@carbon/react";
 import {
   Notification,
   NotificationNew,
@@ -26,7 +21,10 @@ import {
 } from "@carbon/icons-react";
 import { useIntl } from "react-intl";
 import { useHistory } from "react-router-dom";
-import { getFromOpenElisServer, postToOpenElisServerFullResponse } from "../../utils/Utils";
+import {
+  getFromOpenElisServer,
+  postToOpenElisServerFullResponse,
+} from "../../utils/Utils";
 import PropTypes from "prop-types";
 import "./AlertFeed.css";
 
@@ -41,16 +39,19 @@ const AlertFeed = ({ maxItems, autoRefresh, refreshInterval }) => {
 
   // Load alerts
   const loadAlerts = useCallback(() => {
-    getFromOpenElisServer(`/rest/qc/alerts?limit=${maxItems}&unreadOnly=false`, (response) => {
-      if (response && response.data) {
-        setAlerts(response.data.alerts || response.data || []);
-      } else if (Array.isArray(response)) {
-        setAlerts(response);
-      } else {
-        setError(intl.formatMessage({ id: "qc.alerts.error.loadFailed" }));
-      }
-      setLoading(false);
-    });
+    getFromOpenElisServer(
+      `/rest/qc/alerts?limit=${maxItems}&unreadOnly=false`,
+      (response) => {
+        if (response && response.data) {
+          setAlerts(response.data.alerts || response.data || []);
+        } else if (Array.isArray(response)) {
+          setAlerts(response);
+        } else {
+          setError(intl.formatMessage({ id: "qc.alerts.error.loadFailed" }));
+        }
+        setLoading(false);
+      },
+    );
   }, [maxItems, intl]);
 
   // Initial load and auto-refresh
@@ -75,11 +76,11 @@ const AlertFeed = ({ maxItems, autoRefresh, refreshInterval }) => {
           // Update local state
           setAlerts((prev) =>
             prev.map((alert) =>
-              alert.id === alertId ? { ...alert, isRead: true } : alert
-            )
+              alert.id === alertId ? { ...alert, isRead: true } : alert,
+            ),
           );
         }
-      }
+      },
     );
   };
 
@@ -95,10 +96,10 @@ const AlertFeed = ({ maxItems, autoRefresh, refreshInterval }) => {
       (response) => {
         if (response.ok) {
           setAlerts((prev) =>
-            prev.map((alert) => ({ ...alert, isRead: true }))
+            prev.map((alert) => ({ ...alert, isRead: true })),
           );
         }
-      }
+      },
     );
   };
 
@@ -127,11 +128,20 @@ const AlertFeed = ({ maxItems, autoRefresh, refreshInterval }) => {
     if (diffMins < 1) {
       return intl.formatMessage({ id: "qc.alerts.time.justNow" });
     } else if (diffMins < 60) {
-      return intl.formatMessage({ id: "qc.alerts.time.minutesAgo" }, { count: diffMins });
+      return intl.formatMessage(
+        { id: "qc.alerts.time.minutesAgo" },
+        { count: diffMins },
+      );
     } else if (diffHours < 24) {
-      return intl.formatMessage({ id: "qc.alerts.time.hoursAgo" }, { count: diffHours });
+      return intl.formatMessage(
+        { id: "qc.alerts.time.hoursAgo" },
+        { count: diffHours },
+      );
     } else if (diffDays < 7) {
-      return intl.formatMessage({ id: "qc.alerts.time.daysAgo" }, { count: diffDays });
+      return intl.formatMessage(
+        { id: "qc.alerts.time.daysAgo" },
+        { count: diffDays },
+      );
     } else {
       return intl.formatDate(date, {
         month: "short",
@@ -223,28 +233,40 @@ const AlertFeed = ({ maxItems, autoRefresh, refreshInterval }) => {
                   >
                     {alert.ruleCode}
                   </Tag>
-                  <span className="alert-feed-item-time" data-testid={`alert-time-${alert.id}`}>
+                  <span
+                    className="alert-feed-item-time"
+                    data-testid={`alert-time-${alert.id}`}
+                  >
                     {formatTimestamp(alert.createdDate || alert.timestamp)}
                   </span>
                 </div>
 
-                <div className="alert-feed-item-message" data-testid={`alert-message-${alert.id}`}>
+                <div
+                  className="alert-feed-item-message"
+                  data-testid={`alert-message-${alert.id}`}
+                >
                   {alert.message ||
                     intl.formatMessage(
                       { id: "qc.alerts.defaultMessage" },
                       {
                         rule: alert.ruleCode,
                         analyzer: alert.analyzerName,
-                      }
+                      },
                     )}
                 </div>
 
                 <div className="alert-feed-item-meta">
-                  <span className="alert-feed-item-analyzer" data-testid={`alert-analyzer-${alert.id}`}>
+                  <span
+                    className="alert-feed-item-analyzer"
+                    data-testid={`alert-analyzer-${alert.id}`}
+                  >
                     {alert.analyzerName}
                   </span>
                   {alert.testName && (
-                    <span className="alert-feed-item-test" data-testid={`alert-test-${alert.id}`}>
+                    <span
+                      className="alert-feed-item-test"
+                      data-testid={`alert-test-${alert.id}`}
+                    >
                       • {alert.testName}
                     </span>
                   )}
@@ -258,7 +280,9 @@ const AlertFeed = ({ maxItems, autoRefresh, refreshInterval }) => {
                   size="sm"
                   hasIconOnly
                   renderIcon={CheckmarkOutline}
-                  iconDescription={intl.formatMessage({ id: "qc.alerts.markRead" })}
+                  iconDescription={intl.formatMessage({
+                    id: "qc.alerts.markRead",
+                  })}
                   onClick={(e) => handleMarkAsRead(alert.id, e)}
                   className="alert-feed-item-mark-read"
                   data-testid={`alert-mark-read-${alert.id}`}

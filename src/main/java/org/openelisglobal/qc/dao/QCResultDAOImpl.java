@@ -1,9 +1,12 @@
 package org.openelisglobal.qc.dao;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
-import org.hibernate.Session;
-import org.hibernate.query.Query;
 import org.openelisglobal.common.daoimpl.BaseDAOImpl;
 import org.openelisglobal.common.exception.LIMSRuntimeException;
 import org.openelisglobal.qc.valueholder.QCResult;
@@ -12,6 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * DAO implementation for QCResult entity.
+ *
+ * Uses JPA Criteria API instead of HQL to avoid ClassicQueryTranslatorFactory
+ * column resolution issues (field names like controlLotId not resolving to
+ * control_lot_id).
  */
 @Component
 @Transactional
@@ -23,12 +30,13 @@ public class QCResultDAOImpl extends BaseDAOImpl<QCResult, String> implements QC
 
     @Override
     public List<QCResult> findByControlLot(String controlLotId) throws LIMSRuntimeException {
-        String hql = "FROM QCResult WHERE controlLotId = :controlLotId ORDER BY runDateTime DESC";
         try {
-            Session session = entityManager.unwrap(Session.class);
-            Query<QCResult> query = session.createQuery(hql, QCResult.class);
-            query.setParameter("controlLotId", controlLotId);
-            return query.list();
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<QCResult> cq = cb.createQuery(QCResult.class);
+            Root<QCResult> root = cq.from(QCResult.class);
+            cq.where(cb.equal(root.get("controlLotId"), controlLotId));
+            cq.orderBy(cb.desc(root.get("runDateTime")));
+            return entityManager.createQuery(cq).getResultList();
         } catch (RuntimeException e) {
             throw new LIMSRuntimeException("Error retrieving QC results by control lot", e);
         }
@@ -36,13 +44,13 @@ public class QCResultDAOImpl extends BaseDAOImpl<QCResult, String> implements QC
 
     @Override
     public List<QCResult> findHistoricalForRule(String controlLotId, int limit) throws LIMSRuntimeException {
-        String hql = "FROM QCResult WHERE controlLotId = :controlLotId ORDER BY runDateTime DESC";
         try {
-            Session session = entityManager.unwrap(Session.class);
-            Query<QCResult> query = session.createQuery(hql, QCResult.class);
-            query.setParameter("controlLotId", controlLotId);
-            query.setMaxResults(limit);
-            return query.list();
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<QCResult> cq = cb.createQuery(QCResult.class);
+            Root<QCResult> root = cq.from(QCResult.class);
+            cq.where(cb.equal(root.get("controlLotId"), controlLotId));
+            cq.orderBy(cb.desc(root.get("runDateTime")));
+            return entityManager.createQuery(cq).setMaxResults(limit).getResultList();
         } catch (RuntimeException e) {
             throw new LIMSRuntimeException("Error retrieving historical QC results", e);
         }
@@ -51,14 +59,15 @@ public class QCResultDAOImpl extends BaseDAOImpl<QCResult, String> implements QC
     @Override
     public List<QCResult> findByInstrumentAndDateRange(Integer instrumentId, Timestamp startDate, Timestamp endDate)
             throws LIMSRuntimeException {
-        String hql = "FROM QCResult WHERE instrumentId = :instrumentId AND runDateTime >= :startDate AND runDateTime <= :endDate ORDER BY runDateTime DESC";
         try {
-            Session session = entityManager.unwrap(Session.class);
-            Query<QCResult> query = session.createQuery(hql, QCResult.class);
-            query.setParameter("instrumentId", instrumentId);
-            query.setParameter("startDate", startDate);
-            query.setParameter("endDate", endDate);
-            return query.list();
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<QCResult> cq = cb.createQuery(QCResult.class);
+            Root<QCResult> root = cq.from(QCResult.class);
+            cq.where(cb.equal(root.get("instrumentId"), instrumentId),
+                    cb.greaterThanOrEqualTo(root.get("runDateTime"), startDate),
+                    cb.lessThanOrEqualTo(root.get("runDateTime"), endDate));
+            cq.orderBy(cb.desc(root.get("runDateTime")));
+            return entityManager.createQuery(cq).getResultList();
         } catch (RuntimeException e) {
             throw new LIMSRuntimeException("Error retrieving QC results by instrument and date range", e);
         }
@@ -71,12 +80,13 @@ public class QCResultDAOImpl extends BaseDAOImpl<QCResult, String> implements QC
 
     @Override
     public List<QCResult> findByControlLotIdOrderByRunDateTime(String controlLotId) throws LIMSRuntimeException {
-        String hql = "FROM QCResult WHERE controlLotId = :controlLotId ORDER BY runDateTime ASC";
         try {
-            Session session = entityManager.unwrap(Session.class);
-            Query<QCResult> query = session.createQuery(hql, QCResult.class);
-            query.setParameter("controlLotId", controlLotId);
-            return query.list();
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<QCResult> cq = cb.createQuery(QCResult.class);
+            Root<QCResult> root = cq.from(QCResult.class);
+            cq.where(cb.equal(root.get("controlLotId"), controlLotId));
+            cq.orderBy(cb.asc(root.get("runDateTime")));
+            return entityManager.createQuery(cq).getResultList();
         } catch (RuntimeException e) {
             throw new LIMSRuntimeException("Error retrieving QC results by control lot ordered by date", e);
         }
@@ -85,28 +95,53 @@ public class QCResultDAOImpl extends BaseDAOImpl<QCResult, String> implements QC
     @Override
     public List<QCResult> findByControlLotAndDateRange(String controlLotId, Timestamp startDate, Timestamp endDate)
             throws LIMSRuntimeException {
-        StringBuilder hql = new StringBuilder("FROM QCResult WHERE controlLotId = :controlLotId");
-        if (startDate != null) {
-            hql.append(" AND runDateTime >= :startDate");
-        }
-        if (endDate != null) {
-            hql.append(" AND runDateTime <= :endDate");
-        }
-        hql.append(" ORDER BY runDateTime ASC");
-
         try {
-            Session session = entityManager.unwrap(Session.class);
-            Query<QCResult> query = session.createQuery(hql.toString(), QCResult.class);
-            query.setParameter("controlLotId", controlLotId);
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<QCResult> cq = cb.createQuery(QCResult.class);
+            Root<QCResult> root = cq.from(QCResult.class);
+
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("controlLotId"), controlLotId));
             if (startDate != null) {
-                query.setParameter("startDate", startDate);
+                predicates.add(cb.greaterThanOrEqualTo(root.get("runDateTime"), startDate));
             }
             if (endDate != null) {
-                query.setParameter("endDate", endDate);
+                predicates.add(cb.lessThanOrEqualTo(root.get("runDateTime"), endDate));
             }
-            return query.list();
+
+            cq.where(predicates.toArray(new Predicate[0]));
+            cq.orderBy(cb.asc(root.get("runDateTime")));
+            return entityManager.createQuery(cq).getResultList();
         } catch (RuntimeException e) {
             throw new LIMSRuntimeException("Error retrieving QC results by control lot and date range", e);
+        }
+    }
+
+    @Override
+    public List<QCResult> findLatestByInstrumentAndTest(Integer instrumentId, Integer testId, int limit)
+            throws LIMSRuntimeException {
+        try {
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<QCResult> cq = cb.createQuery(QCResult.class);
+            Root<QCResult> root = cq.from(QCResult.class);
+            cq.where(cb.equal(root.get("instrumentId"), instrumentId), cb.equal(root.get("testId"), testId));
+            cq.orderBy(cb.desc(root.get("runDateTime")));
+            return entityManager.createQuery(cq).setMaxResults(limit).getResultList();
+        } catch (RuntimeException e) {
+            throw new LIMSRuntimeException("Error retrieving latest QC results by instrument and test", e);
+        }
+    }
+
+    @Override
+    public List<Integer> findDistinctInstrumentIds() throws LIMSRuntimeException {
+        try {
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<Integer> cq = cb.createQuery(Integer.class);
+            Root<QCResult> root = cq.from(QCResult.class);
+            cq.select(root.get("instrumentId")).distinct(true);
+            return entityManager.createQuery(cq).getResultList();
+        } catch (RuntimeException e) {
+            throw new LIMSRuntimeException("Error retrieving distinct instrument IDs from QC results", e);
         }
     }
 }

@@ -115,10 +115,7 @@ const ViolationDetailModal = ({
               id: `qc.violations.severity.${violation.severity?.toLowerCase()}`,
             })}
           </Tag>
-          <Tag
-            type={getStatusTagType()}
-            data-testid="violation-detail-status"
-          >
+          <Tag type={getStatusTagType()} data-testid="violation-detail-status">
             {intl.formatMessage({
               id: `qc.violations.status.${(violation.resolutionStatus || violation.status)?.toLowerCase()}`,
             })}
@@ -127,7 +124,9 @@ const ViolationDetailModal = ({
 
         {/* Violation Details */}
         <div className="violation-detail-section">
-          <h4>{intl.formatMessage({ id: "qc.violations.detail.information" })}</h4>
+          <h4>
+            {intl.formatMessage({ id: "qc.violations.detail.information" })}
+          </h4>
           <StructuredListWrapper data-testid="violation-detail-info">
             <StructuredListBody>
               <StructuredListRow>
@@ -157,10 +156,14 @@ const ViolationDetailModal = ({
               </StructuredListRow>
               <StructuredListRow>
                 <StructuredListCell>
-                  {intl.formatMessage({ id: "qc.violations.detail.controlLot" })}
+                  {intl.formatMessage({
+                    id: "qc.violations.detail.controlLot",
+                  })}
                 </StructuredListCell>
                 <StructuredListCell>
-                  {violation.controlLotNumber || violation.controlLot?.lotNumber || "-"}
+                  {violation.controlLotNumber ||
+                    violation.controlLot?.lotNumber ||
+                    "-"}
                 </StructuredListCell>
               </StructuredListRow>
               <StructuredListRow>
@@ -168,7 +171,9 @@ const ViolationDetailModal = ({
                   {intl.formatMessage({ id: "qc.violations.detail.timestamp" })}
                 </StructuredListCell>
                 <StructuredListCell>
-                  {formatTimestamp(violation.violationTimestamp || violation.createdDate)}
+                  {formatTimestamp(
+                    violation.violationTimestamp || violation.createdDate,
+                  )}
                 </StructuredListCell>
               </StructuredListRow>
             </StructuredListBody>
@@ -178,18 +183,28 @@ const ViolationDetailModal = ({
         {/* Affected Results */}
         {violation.affectedResults && violation.affectedResults.length > 0 && (
           <div className="violation-detail-section">
-            <h4>{intl.formatMessage({ id: "qc.violations.detail.affectedResults" })}</h4>
+            <h4>
+              {intl.formatMessage({
+                id: "qc.violations.detail.affectedResults",
+              })}
+            </h4>
             <StructuredListWrapper data-testid="violation-detail-results">
               <StructuredListHead>
                 <StructuredListRow head>
                   <StructuredListCell head>
-                    {intl.formatMessage({ id: "qc.violations.detail.result.value" })}
+                    {intl.formatMessage({
+                      id: "qc.violations.detail.result.value",
+                    })}
                   </StructuredListCell>
                   <StructuredListCell head>
-                    {intl.formatMessage({ id: "qc.violations.detail.result.zScore" })}
+                    {intl.formatMessage({
+                      id: "qc.violations.detail.result.zScore",
+                    })}
                   </StructuredListCell>
                   <StructuredListCell head>
-                    {intl.formatMessage({ id: "qc.violations.detail.result.timestamp" })}
+                    {intl.formatMessage({
+                      id: "qc.violations.detail.result.timestamp",
+                    })}
                   </StructuredListCell>
                 </StructuredListRow>
               </StructuredListHead>
@@ -197,7 +212,9 @@ const ViolationDetailModal = ({
                 {violation.affectedResults.map((result, index) => (
                   <StructuredListRow key={result.id || index}>
                     <StructuredListCell>
-                      {result.resultValue?.toFixed(2) || result.value?.toFixed(2) || "-"}
+                      {result.resultValue?.toFixed(2) ||
+                        result.value?.toFixed(2) ||
+                        "-"}
                     </StructuredListCell>
                     <StructuredListCell>
                       {result.zScore?.toFixed(2) || "-"}
@@ -213,73 +230,103 @@ const ViolationDetailModal = ({
         )}
 
         {/* Corrective Actions */}
-        {violation.correctiveActions && violation.correctiveActions.length > 0 && (
-          <div className="violation-detail-section">
-            <h4>{intl.formatMessage({ id: "qc.violations.detail.correctiveActions" })}</h4>
-            <StructuredListWrapper data-testid="violation-detail-corrective-actions">
-              <StructuredListHead>
-                <StructuredListRow head>
-                  <StructuredListCell head>
-                    {intl.formatMessage({ id: "qc.violations.detail.action.type" })}
-                  </StructuredListCell>
-                  <StructuredListCell head>
-                    {intl.formatMessage({ id: "qc.violations.detail.action.status" })}
-                  </StructuredListCell>
-                  <StructuredListCell head>
-                    {intl.formatMessage({ id: "qc.violations.detail.action.assignedTo" })}
-                  </StructuredListCell>
-                </StructuredListRow>
-              </StructuredListHead>
-              <StructuredListBody>
-                {violation.correctiveActions.map((action, index) => (
-                  <StructuredListRow key={action.id || index}>
-                    <StructuredListCell>
-                      {intl.formatMessage({ id: `qc.correctiveAction.type.${action.actionType?.toLowerCase()}` })}
+        {violation.correctiveActions &&
+          violation.correctiveActions.length > 0 && (
+            <div className="violation-detail-section">
+              <h4>
+                {intl.formatMessage({
+                  id: "qc.violations.detail.correctiveActions",
+                })}
+              </h4>
+              <StructuredListWrapper data-testid="violation-detail-corrective-actions">
+                <StructuredListHead>
+                  <StructuredListRow head>
+                    <StructuredListCell head>
+                      {intl.formatMessage({
+                        id: "qc.violations.detail.action.type",
+                      })}
                     </StructuredListCell>
-                    <StructuredListCell>
-                      <Tag
-                        type={action.status === "COMPLETED" ? "green" : action.status === "IN_PROGRESS" ? "blue" : "gray"}
-                        size="sm"
-                      >
-                        {intl.formatMessage({ id: `qc.correctiveAction.status.${action.status?.toLowerCase()}` })}
-                      </Tag>
+                    <StructuredListCell head>
+                      {intl.formatMessage({
+                        id: "qc.violations.detail.action.status",
+                      })}
                     </StructuredListCell>
-                    <StructuredListCell>
-                      {action.assignedUserName || action.assignedUser?.name || "-"}
+                    <StructuredListCell head>
+                      {intl.formatMessage({
+                        id: "qc.violations.detail.action.assignedTo",
+                      })}
                     </StructuredListCell>
                   </StructuredListRow>
-                ))}
-              </StructuredListBody>
-            </StructuredListWrapper>
-          </div>
-        )}
+                </StructuredListHead>
+                <StructuredListBody>
+                  {violation.correctiveActions.map((action, index) => (
+                    <StructuredListRow key={action.id || index}>
+                      <StructuredListCell>
+                        {intl.formatMessage({
+                          id: `qc.correctiveAction.type.${action.actionType?.toLowerCase()}`,
+                        })}
+                      </StructuredListCell>
+                      <StructuredListCell>
+                        <Tag
+                          type={
+                            action.status === "COMPLETED"
+                              ? "green"
+                              : action.status === "IN_PROGRESS"
+                                ? "blue"
+                                : "gray"
+                          }
+                          size="sm"
+                        >
+                          {intl.formatMessage({
+                            id: `qc.correctiveAction.status.${action.status?.toLowerCase()}`,
+                          })}
+                        </Tag>
+                      </StructuredListCell>
+                      <StructuredListCell>
+                        {action.assignedUserName ||
+                          action.assignedUser?.name ||
+                          "-"}
+                      </StructuredListCell>
+                    </StructuredListRow>
+                  ))}
+                </StructuredListBody>
+              </StructuredListWrapper>
+            </div>
+          )}
 
         {/* Resolution Details (if resolved) */}
-        {violation.resolutionStatus === "RESOLVED" && violation.resolutionDetails && (
-          <div className="violation-detail-section">
-            <h4>{intl.formatMessage({ id: "qc.violations.detail.resolution" })}</h4>
-            <StructuredListWrapper data-testid="violation-detail-resolution">
-              <StructuredListBody>
-                <StructuredListRow>
-                  <StructuredListCell>
-                    {intl.formatMessage({ id: "qc.violations.detail.resolution.date" })}
-                  </StructuredListCell>
-                  <StructuredListCell>
-                    {formatTimestamp(violation.resolutionTimestamp)}
-                  </StructuredListCell>
-                </StructuredListRow>
-                <StructuredListRow>
-                  <StructuredListCell>
-                    {intl.formatMessage({ id: "qc.violations.detail.resolution.notes" })}
-                  </StructuredListCell>
-                  <StructuredListCell>
-                    {violation.resolutionDetails}
-                  </StructuredListCell>
-                </StructuredListRow>
-              </StructuredListBody>
-            </StructuredListWrapper>
-          </div>
-        )}
+        {violation.resolutionStatus === "RESOLVED" &&
+          violation.resolutionDetails && (
+            <div className="violation-detail-section">
+              <h4>
+                {intl.formatMessage({ id: "qc.violations.detail.resolution" })}
+              </h4>
+              <StructuredListWrapper data-testid="violation-detail-resolution">
+                <StructuredListBody>
+                  <StructuredListRow>
+                    <StructuredListCell>
+                      {intl.formatMessage({
+                        id: "qc.violations.detail.resolution.date",
+                      })}
+                    </StructuredListCell>
+                    <StructuredListCell>
+                      {formatTimestamp(violation.resolutionTimestamp)}
+                    </StructuredListCell>
+                  </StructuredListRow>
+                  <StructuredListRow>
+                    <StructuredListCell>
+                      {intl.formatMessage({
+                        id: "qc.violations.detail.resolution.notes",
+                      })}
+                    </StructuredListCell>
+                    <StructuredListCell>
+                      {violation.resolutionDetails}
+                    </StructuredListCell>
+                  </StructuredListRow>
+                </StructuredListBody>
+              </StructuredListWrapper>
+            </div>
+          )}
       </ModalBody>
       <ModalFooter data-testid="violation-detail-modal-footer">
         <Button kind="secondary" onClick={onClose}>
@@ -300,7 +347,9 @@ const ViolationDetailModal = ({
             onClick={() => onCreateCorrectiveAction(violation.id)}
             data-testid="violation-detail-corrective-action-button"
           >
-            {intl.formatMessage({ id: "qc.violations.action.createCorrectiveAction" })}
+            {intl.formatMessage({
+              id: "qc.violations.action.createCorrectiveAction",
+            })}
           </Button>
         )}
       </ModalFooter>

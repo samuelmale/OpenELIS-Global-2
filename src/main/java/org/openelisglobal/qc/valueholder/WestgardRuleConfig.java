@@ -43,6 +43,10 @@ public class WestgardRuleConfig extends BaseObject<String> {
     @Column(name = "requires_corrective_action", nullable = false)
     private Boolean requiresCorrectiveAction = false;
 
+    @NotNull
+    @Column(name = "sys_user_id", nullable = false)
+    private Integer systemUserId;
+
     public WestgardRuleConfig() {
     }
 
@@ -102,5 +106,13 @@ public class WestgardRuleConfig extends BaseObject<String> {
 
     public void setRequiresCorrectiveAction(Boolean requiresCorrectiveAction) {
         this.requiresCorrectiveAction = requiresCorrectiveAction;
+    }
+
+    public Integer getSystemUserId() {
+        return systemUserId;
+    }
+
+    public void setSystemUserId(Integer systemUserId) {
+        this.systemUserId = systemUserId;
     }
 }

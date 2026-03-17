@@ -60,4 +60,11 @@ public interface QCControlLotService extends BaseObjectService<QCControlLot, Str
      * @param instrumentId The instrument ID to check
      */
     void checkAndExpireLots(Integer testId, Integer instrumentId);
+
+    /**
+     * Get all control lots regardless of status, test, or instrument.
+     *
+     * @return List of all control lots
+     */
+    List<QCControlLot> getAllControlLots();
 }

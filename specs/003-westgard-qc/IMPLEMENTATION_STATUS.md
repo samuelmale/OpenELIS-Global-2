@@ -98,7 +98,7 @@
 - **Phase 7**: User Story 3 - Alerts (12 tasks)
 - **Phase 8**: User Story 1 - Dashboard (15 tasks)
 - **Phase 9**: User Story 2 - Charts (9 tasks)
-- **Phase 10**: User Story 4 - Corrective Actions (12 tasks)
+- **Phase 10**: ~~User Story 4 - Corrective Actions (12 tasks)~~ — **DE-SCOPED**: Corrective actions will be implemented under the NCE (Non-Conforming Event) workflow instead. QC violations will publish NCE events, and corrective actions will be managed through the existing NCE module. See [Decision Log](#decision-log) below.
 - **Phase 11**: User Story 7 - Trends (9 tasks)
 - **Phase 12**: Polish (28 tasks)
 - **Phase 13**: Constitution Verification (8 tasks)
@@ -205,3 +205,32 @@ Security/Compliance (RBAC pending in services)
 
 **Next Session**: Continue with T021-T026 (remaining DAOs) or proceed directly
 to Phase 3 (US6) if Phase 2 DAOs are not blocking.
+
+---
+
+## Decision Log
+
+### 2026-03-17: Corrective Actions moved to NCE workflow
+
+**Decision**: FR7 (Corrective Action Workflow) will **not** be implemented as a
+standalone QC feature. Instead, QC violations will publish Non-Conforming Event
+(NCE) events, and corrective actions will be managed through the existing NCE
+module.
+
+**Rationale**: Corrective actions are a cross-cutting concern shared across
+multiple lab workflows (QC, sample non-conformity, instrument failures). Building
+them into the NCE module avoids duplication and provides a unified corrective
+action workflow across the system.
+
+**Impact on QC module**:
+
+- The "Corrective Actions" tab has been removed from the QC Dashboard
+- Backend entities (`QCCorrectiveAction`, DAO, Service, Controller) remain in
+  codebase but are unused pending NCE integration
+- QC violations will need an event publisher to create NCE events when violations
+  are detected
+- FR7.1-FR7.7 requirements transfer to the NCE feature specification
+
+**What remains in QC scope**: Violation detection, alerting, acknowledgement, and
+dashboard monitoring. The QC module will be an **event source** for NCE, not an
+action handler.
