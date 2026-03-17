@@ -45,7 +45,7 @@ import "./ControlLotSetup.css";
 const ControlLotSetup = () => {
   const intl = useIntl();
   const history = useHistory();
-  const { lotId } = useParams();
+  const { id: lotId } = useParams();
 
   const isEditMode = !!lotId;
 
@@ -68,29 +68,37 @@ const ControlLotSetup = () => {
   // Control level options (FR-002)
   const controlLevelOptions = [
     { id: "LOW", label: intl.formatMessage({ id: "qc.controlLot.level.low" }) },
-    { id: "NORMAL", label: intl.formatMessage({ id: "qc.controlLot.level.normal" }) },
-    { id: "HIGH", label: intl.formatMessage({ id: "qc.controlLot.level.high" }) },
+    {
+      id: "NORMAL",
+      label: intl.formatMessage({ id: "qc.controlLot.level.normal" }),
+    },
+    {
+      id: "HIGH",
+      label: intl.formatMessage({ id: "qc.controlLot.level.high" }),
+    },
   ];
 
   // Validation schema
   const validationSchema = Yup.object().shape({
     lotNumber: Yup.string().required(
-      intl.formatMessage({ id: "qc.controlLot.validation.lotNumberRequired" })
+      intl.formatMessage({ id: "qc.controlLot.validation.lotNumberRequired" }),
     ),
     controlMaterial: Yup.string().required(
-      intl.formatMessage({ id: "qc.controlLot.validation.materialRequired" })
+      intl.formatMessage({ id: "qc.controlLot.validation.materialRequired" }),
     ),
     controlLevel: Yup.string().required(
-      intl.formatMessage({ id: "qc.controlLot.validation.levelRequired" })
+      intl.formatMessage({ id: "qc.controlLot.validation.levelRequired" }),
     ),
-    expirationDate: Yup.date().required(
-      intl.formatMessage({ id: "qc.controlLot.validation.expirationRequired" })
+    expirationDate: Yup.string().required(
+      intl.formatMessage({
+        id: "qc.controlLot.validation.expirationRequired",
+      }),
     ),
     analyzerId: Yup.string().required(
-      intl.formatMessage({ id: "qc.controlLot.validation.analyzerRequired" })
+      intl.formatMessage({ id: "qc.controlLot.validation.analyzerRequired" }),
     ),
     testId: Yup.string().required(
-      intl.formatMessage({ id: "qc.controlLot.validation.testRequired" })
+      intl.formatMessage({ id: "qc.controlLot.validation.testRequired" }),
     ),
   });
 
@@ -98,24 +106,21 @@ const ControlLotSetup = () => {
   useEffect(() => {
     if (isEditMode) {
       setLoading(true);
-      getFromOpenElisServer(`/rest/qc/control-lots/${lotId}`, (response) => {
-        if (response && response.data) {
-          setExistingLot(response.data);
+      getFromOpenElisServer(`/rest/qc/controlLot/${lotId}`, (response) => {
+        const lot =
+          response && response.data
+            ? response.data
+            : response && response.id
+              ? response
+              : null;
+        if (lot) {
+          setExistingLot(lot);
           setStatisticsConfig({
-            calculationMethod: response.data.statisticsCalculationMethod || "MANUFACTURER_FIXED",
-            rollingWindowSize: response.data.rollingWindowSize || 20,
-            initialRunsRequired: response.data.initialRunsRequired || 20,
-            mean: response.data.targetMean,
-            standardDeviation: response.data.targetSD,
-          });
-        } else if (response && response.id) {
-          setExistingLot(response);
-          setStatisticsConfig({
-            calculationMethod: response.statisticsCalculationMethod || "MANUFACTURER_FIXED",
-            rollingWindowSize: response.rollingWindowSize || 20,
-            initialRunsRequired: response.initialRunsRequired || 20,
-            mean: response.targetMean,
-            standardDeviation: response.targetSD,
+            calculationMethod: lot.calculationMethod || "MANUFACTURER_FIXED",
+            rollingWindowSize: lot.rollingWindowSize || 20,
+            initialRunsRequired: lot.initialRunsCount || 20,
+            mean: lot.manufacturerMean,
+            standardDeviation: lot.manufacturerStdDev,
           });
         }
         setLoading(false);
@@ -125,8 +130,10 @@ const ControlLotSetup = () => {
 
   // Load analyzers
   useEffect(() => {
-    getFromOpenElisServer("/rest/analyzers", (response) => {
-      if (response && Array.isArray(response.data)) {
+    getFromOpenElisServer("/rest/analyzer/analyzers", (response) => {
+      if (response && Array.isArray(response.analyzers)) {
+        setAnalyzers(response.analyzers);
+      } else if (response && Array.isArray(response.data)) {
         setAnalyzers(response.data);
       } else if (Array.isArray(response)) {
         setAnalyzers(response);
@@ -134,39 +141,44 @@ const ControlLotSetup = () => {
     });
   }, []);
 
-  // Load tests when analyzer changes
-  const loadTests = (analyzerId) => {
-    if (!analyzerId) {
-      setTests([]);
-      return;
-    }
-    getFromOpenElisServer(`/rest/analyzers/${analyzerId}/tests`, (response) => {
-      if (response && Array.isArray(response.data)) {
-        setTests(response.data);
-      } else if (Array.isArray(response)) {
+  // Load all tests on mount
+  useEffect(() => {
+    getFromOpenElisServer("/rest/tests", (response) => {
+      if (Array.isArray(response)) {
         setTests(response);
       }
     });
-  };
+  }, []);
 
   // Initial form values
   const getInitialValues = () => {
     if (existingLot) {
       return {
         lotNumber: existingLot.lotNumber || "",
-        controlMaterial: existingLot.controlMaterial || "",
+        controlMaterial: existingLot.productName || "",
         controlLevel: existingLot.controlLevel || "",
-        expirationDate: existingLot.expirationDate ? new Date(existingLot.expirationDate) : null,
-        analyzerId: existingLot.analyzerId || "",
-        testId: existingLot.testId || "",
-        isActive: existingLot.isActive !== false,
+        expirationDate: existingLot.expirationDate
+          ? (() => {
+              const d = new Date(existingLot.expirationDate);
+              const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+              const dd = String(d.getUTCDate()).padStart(2, "0");
+              const yyyy = d.getUTCFullYear();
+              return `${mm}/${dd}/${yyyy}`;
+            })()
+          : "",
+        analyzerId:
+          existingLot.instrumentId != null
+            ? String(existingLot.instrumentId)
+            : "",
+        testId: existingLot.testId != null ? String(existingLot.testId) : "",
+        isActive: existingLot.status === "ACTIVE",
       };
     }
     return {
       lotNumber: "",
       controlMaterial: "",
       controlLevel: "",
-      expirationDate: null,
+      expirationDate: "",
       analyzerId: "",
       testId: "",
       isActive: true,
@@ -179,40 +191,42 @@ const ControlLotSetup = () => {
     setError(null);
 
     const payload = {
-      ...values,
-      expirationDate: values.expirationDate?.toISOString(),
-      statisticsCalculationMethod: statisticsConfig.calculationMethod,
-      rollingWindowSize: statisticsConfig.rollingWindowSize,
-      initialRunsRequired: statisticsConfig.initialRunsRequired,
-      targetMean: statisticsConfig.mean,
-      targetSD: statisticsConfig.standardDeviation,
+      id: isEditMode ? lotId : undefined,
+      productName: values.controlMaterial,
+      lotNumber: values.lotNumber,
+      controlLevel: values.controlLevel,
+      expirationDate: values.expirationDate
+        ? (() => {
+            const [mm, dd, yyyy] = values.expirationDate.split("/");
+            return new Date(`${yyyy}-${mm}-${dd}T12:00:00`).toISOString();
+          })()
+        : undefined,
+      instrumentId: values.analyzerId
+        ? parseInt(values.analyzerId, 10)
+        : undefined,
+      testId: values.testId ? parseInt(values.testId, 10) : undefined,
+      calculationMethod: statisticsConfig.calculationMethod,
+      initialRunsCount: statisticsConfig.initialRunsRequired,
+      manufacturerMean: statisticsConfig.mean,
+      manufacturerStdDev: statisticsConfig.standardDeviation,
+      activationDate: new Date().toISOString(),
+      status: values.isActive ? "ACTIVE" : "EXPIRED",
     };
 
-    const endpoint = isEditMode
-      ? `/rest/qc/control-lots/${lotId}`
-      : "/rest/qc/control-lots";
-
-    const method = isEditMode ? "PUT" : "POST";
-
     postToOpenElisServerFullResponse(
-      endpoint,
+      "/rest/qc/controlLot",
       JSON.stringify(payload),
       (response) => {
         if (response.ok) {
-          response.json().then((data) => {
-            if (data.status === "success" || data.id) {
-              history.push("/analyzers/qc/control-lots");
-            } else {
-              setError(data.error || intl.formatMessage({ id: "qc.controlLot.error.saveFailed" }));
-            }
-          });
+          history.push("/analyzers/qc/control-lots");
         } else {
-          setError(intl.formatMessage({ id: "qc.controlLot.error.saveFailed" }));
+          setError(
+            intl.formatMessage({ id: "qc.controlLot.error.saveFailed" }),
+          );
         }
         setSubmitting(false);
         setFormSubmitting(false);
       },
-      method
     );
   };
 
@@ -229,7 +243,10 @@ const ControlLotSetup = () => {
 
   if (loading) {
     return (
-      <div className="control-lot-setup-loading" data-testid="control-lot-setup-loading">
+      <div
+        className="control-lot-setup-loading"
+        data-testid="control-lot-setup-loading"
+      >
         <Loading
           description={intl.formatMessage({ id: "qc.controlLot.loading" })}
           withOverlay={false}
@@ -241,7 +258,10 @@ const ControlLotSetup = () => {
   return (
     <div className="control-lot-setup" data-testid="control-lot-setup">
       {/* Header */}
-      <div className="control-lot-setup-header" data-testid="control-lot-setup-header">
+      <div
+        className="control-lot-setup-header"
+        data-testid="control-lot-setup-header"
+      >
         <PageTitle
           breadcrumbs={[
             {
@@ -250,7 +270,7 @@ const ControlLotSetup = () => {
             },
             {
               label: intl.formatMessage({ id: "qc.dashboard.title" }),
-              link: "/analyzers/qc",
+              link: "/analyzers/qc/db",
             },
             {
               label: intl.formatMessage({ id: "qc.controlLots.title" }),
@@ -306,8 +326,12 @@ const ControlLotSetup = () => {
                   <TextInput
                     id="lot-number"
                     name="lotNumber"
-                    labelText={intl.formatMessage({ id: "qc.controlLot.field.lotNumber" })}
-                    placeholder={intl.formatMessage({ id: "qc.controlLot.field.lotNumberPlaceholder" })}
+                    labelText={intl.formatMessage({
+                      id: "qc.controlLot.field.lotNumber",
+                    })}
+                    placeholder={intl.formatMessage({
+                      id: "qc.controlLot.field.lotNumberPlaceholder",
+                    })}
                     value={values.lotNumber}
                     onChange={handleChange}
                     onBlur={handleBlur}
@@ -324,12 +348,18 @@ const ControlLotSetup = () => {
                   <TextInput
                     id="control-material"
                     name="controlMaterial"
-                    labelText={intl.formatMessage({ id: "qc.controlLot.field.material" })}
-                    placeholder={intl.formatMessage({ id: "qc.controlLot.field.materialPlaceholder" })}
+                    labelText={intl.formatMessage({
+                      id: "qc.controlLot.field.material",
+                    })}
+                    placeholder={intl.formatMessage({
+                      id: "qc.controlLot.field.materialPlaceholder",
+                    })}
                     value={values.controlMaterial}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    invalid={touched.controlMaterial && !!errors.controlMaterial}
+                    invalid={
+                      touched.controlMaterial && !!errors.controlMaterial
+                    }
                     invalidText={errors.controlMaterial}
                     data-testid="control-lot-material-input"
                   />
@@ -341,12 +371,20 @@ const ControlLotSetup = () => {
                 <FormGroup legendText="">
                   <Dropdown
                     id="control-level"
-                    titleText={intl.formatMessage({ id: "qc.controlLot.field.level" })}
-                    label={intl.formatMessage({ id: "qc.controlLot.field.selectLevel" })}
+                    titleText={intl.formatMessage({
+                      id: "qc.controlLot.field.level",
+                    })}
+                    label={intl.formatMessage({
+                      id: "qc.controlLot.field.selectLevel",
+                    })}
                     items={controlLevelOptions}
                     itemToString={(item) => item?.label || ""}
-                    selectedItem={controlLevelOptions.find((o) => o.id === values.controlLevel)}
-                    onChange={({ selectedItem }) => setFieldValue("controlLevel", selectedItem?.id || "")}
+                    selectedItem={controlLevelOptions.find(
+                      (o) => o.id === values.controlLevel,
+                    )}
+                    onChange={({ selectedItem }) =>
+                      setFieldValue("controlLevel", selectedItem?.id || "")
+                    }
                     invalid={touched.controlLevel && !!errors.controlLevel}
                     invalidText={errors.controlLevel}
                     data-testid="control-lot-level-dropdown"
@@ -359,14 +397,26 @@ const ControlLotSetup = () => {
                 <FormGroup legendText="">
                   <DatePicker
                     datePickerType="single"
-                    dateFormat="Y-m-d"
+                    dateFormat="m/d/Y"
                     value={values.expirationDate}
-                    onChange={([date]) => setFieldValue("expirationDate", date)}
+                    onChange={([date]) => {
+                      if (date) {
+                        const mm = String(date.getMonth() + 1).padStart(2, "0");
+                        const dd = String(date.getDate()).padStart(2, "0");
+                        const yyyy = date.getFullYear();
+                        setFieldValue("expirationDate", `${mm}/${dd}/${yyyy}`);
+                      } else {
+                        setFieldValue("expirationDate", "");
+                      }
+                    }}
                   >
                     <DatePickerInput
                       id="expiration-date"
-                      placeholder="yyyy-mm-dd"
-                      labelText={intl.formatMessage({ id: "qc.controlLot.field.expiration" })}
+                      placeholder="mm/dd/yyyy"
+                      labelText={intl.formatMessage({
+                        id: "qc.controlLot.field.expiration",
+                      })}
+                      onBlur={handleBlur("expirationDate")}
                       invalid={touched.expirationDate && !!errors.expirationDate}
                       invalidText={errors.expirationDate}
                       data-testid="control-lot-expiration-input"
@@ -380,15 +430,20 @@ const ControlLotSetup = () => {
                 <FormGroup legendText="">
                   <Dropdown
                     id="analyzer"
-                    titleText={intl.formatMessage({ id: "qc.controlLot.field.analyzer" })}
-                    label={intl.formatMessage({ id: "qc.controlLot.field.selectAnalyzer" })}
+                    titleText={intl.formatMessage({
+                      id: "qc.controlLot.field.analyzer",
+                    })}
+                    label={intl.formatMessage({
+                      id: "qc.controlLot.field.selectAnalyzer",
+                    })}
                     items={analyzers}
                     itemToString={(item) => item?.name || ""}
-                    selectedItem={analyzers.find((a) => a.id === values.analyzerId)}
+                    selectedItem={analyzers.find(
+                      (a) => a.id === values.analyzerId,
+                    )}
                     onChange={({ selectedItem }) => {
                       setFieldValue("analyzerId", selectedItem?.id || "");
                       setFieldValue("testId", "");
-                      loadTests(selectedItem?.id);
                     }}
                     invalid={touched.analyzerId && !!errors.analyzerId}
                     invalidText={errors.analyzerId}
@@ -402,12 +457,18 @@ const ControlLotSetup = () => {
                 <FormGroup legendText="">
                   <Dropdown
                     id="test"
-                    titleText={intl.formatMessage({ id: "qc.controlLot.field.test" })}
-                    label={intl.formatMessage({ id: "qc.controlLot.field.selectTest" })}
+                    titleText={intl.formatMessage({
+                      id: "qc.controlLot.field.test",
+                    })}
+                    label={intl.formatMessage({
+                      id: "qc.controlLot.field.selectTest",
+                    })}
                     items={tests}
-                    itemToString={(item) => item?.name || ""}
+                    itemToString={(item) => item?.value || item?.name || ""}
                     selectedItem={tests.find((t) => t.id === values.testId)}
-                    onChange={({ selectedItem }) => setFieldValue("testId", selectedItem?.id || "")}
+                    onChange={({ selectedItem }) =>
+                      setFieldValue("testId", selectedItem?.id || "")
+                    }
                     invalid={touched.testId && !!errors.testId}
                     invalidText={errors.testId}
                     disabled={!values.analyzerId}
@@ -421,9 +482,15 @@ const ControlLotSetup = () => {
                 <FormGroup legendText="">
                   <Toggle
                     id="is-active"
-                    labelText={intl.formatMessage({ id: "qc.controlLot.field.isActive" })}
-                    labelA={intl.formatMessage({ id: "qc.controlLot.field.inactive" })}
-                    labelB={intl.formatMessage({ id: "qc.controlLot.field.active" })}
+                    labelText={intl.formatMessage({
+                      id: "qc.controlLot.field.isActive",
+                    })}
+                    labelA={intl.formatMessage({
+                      id: "qc.controlLot.field.inactive",
+                    })}
+                    labelB={intl.formatMessage({
+                      id: "qc.controlLot.field.active",
+                    })}
                     toggled={values.isActive}
                     onToggle={(checked) => setFieldValue("isActive", checked)}
                     data-testid="control-lot-active-toggle"
@@ -433,9 +500,16 @@ const ControlLotSetup = () => {
 
               {/* Statistics Configuration (FR-003, FR-004, FR-005) */}
               <Column lg={16} md={8} sm={4}>
-                <Tile className="control-lot-setup-statistics" data-testid="control-lot-statistics-tile">
+                <Tile
+                  className="control-lot-setup-statistics"
+                  data-testid="control-lot-statistics-tile"
+                >
                   <div className="control-lot-setup-statistics-header">
-                    <h4>{intl.formatMessage({ id: "qc.controlLot.statistics.title" })}</h4>
+                    <h4>
+                      {intl.formatMessage({
+                        id: "qc.controlLot.statistics.title",
+                      })}
+                    </h4>
                     <Button
                       kind="ghost"
                       size="sm"
@@ -443,14 +517,18 @@ const ControlLotSetup = () => {
                       onClick={() => setStatisticsModalOpen(true)}
                       data-testid="control-lot-statistics-config-button"
                     >
-                      {intl.formatMessage({ id: "qc.controlLot.statistics.configure" })}
+                      {intl.formatMessage({
+                        id: "qc.controlLot.statistics.configure",
+                      })}
                     </Button>
                   </div>
                   <Grid>
                     <Column lg={4} md={4} sm={4}>
                       <div className="stat-item">
                         <span className="stat-label">
-                          {intl.formatMessage({ id: "qc.controlLot.statistics.method" })}
+                          {intl.formatMessage({
+                            id: "qc.controlLot.statistics.method",
+                          })}
                         </span>
                         <span className="stat-value">
                           {intl.formatMessage({
@@ -462,7 +540,9 @@ const ControlLotSetup = () => {
                     <Column lg={4} md={4} sm={4}>
                       <div className="stat-item">
                         <span className="stat-label">
-                          {intl.formatMessage({ id: "qc.controlLot.statistics.mean" })}
+                          {intl.formatMessage({
+                            id: "qc.controlLot.statistics.mean",
+                          })}
                         </span>
                         <span className="stat-value">
                           {statisticsConfig.mean?.toFixed(2) || "-"}
@@ -472,10 +552,13 @@ const ControlLotSetup = () => {
                     <Column lg={4} md={4} sm={4}>
                       <div className="stat-item">
                         <span className="stat-label">
-                          {intl.formatMessage({ id: "qc.controlLot.statistics.sd" })}
+                          {intl.formatMessage({
+                            id: "qc.controlLot.statistics.sd",
+                          })}
                         </span>
                         <span className="stat-value">
-                          {statisticsConfig.standardDeviation?.toFixed(2) || "-"}
+                          {statisticsConfig.standardDeviation?.toFixed(2) ||
+                            "-"}
                         </span>
                       </div>
                     </Column>

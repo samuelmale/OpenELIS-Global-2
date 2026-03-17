@@ -119,6 +119,16 @@
         <class>org.openelisglobal.analyzerimport.valueholder.AnalyzerTestMapping</class>
         <class>org.openelisglobal.analyzer.valueholder.AnalyzerType</class>
 
+        <!-- Westgard QC entities (003-westgard-qc) -->
+        <class>org.openelisglobal.qc.valueholder.QCControlLot</class>
+        <class>org.openelisglobal.qc.valueholder.QCResult</class>
+        <class>org.openelisglobal.qc.valueholder.QCStatistics</class>
+        <class>org.openelisglobal.qc.valueholder.QCRuleViolation</class>
+        <class>org.openelisglobal.qc.valueholder.QCViolationResult</class>
+        <class>org.openelisglobal.qc.valueholder.WestgardRuleConfig</class>
+        <class>org.openelisglobal.qc.valueholder.QCAlert</class>
+        <class>org.openelisglobal.qc.valueholder.QCCorrectiveAction</class>
+
         <!-- RS232 Serial Port Configuration entity (011-madagascar-analyzer-integration
             M2) -->
         <class>org.openelisglobal.analyzer.valueholder.SerialPortConfiguration</class>

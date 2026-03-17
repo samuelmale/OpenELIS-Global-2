@@ -105,22 +105,33 @@ const ComplianceStatusTile = ({
       data-testid={`compliance-tile-${analyzerId}`}
     >
       {/* Status indicator */}
-      <div className="compliance-tile-status" data-testid={`compliance-status-${analyzerId}`}>
+      <div
+        className="compliance-tile-status"
+        data-testid={`compliance-status-${analyzerId}`}
+      >
         <StatusIcon
           className={`compliance-tile-status-icon compliance-tile-status-icon--${statusConfig.color}`}
           size={24}
         />
-        <span className="compliance-tile-status-label">{statusConfig.label}</span>
+        <span className="compliance-tile-status-label">
+          {statusConfig.label}
+        </span>
       </div>
 
       {/* Analyzer name */}
-      <h4 className="compliance-tile-name" data-testid={`compliance-analyzer-name-${analyzerId}`}>
+      <h4
+        className="compliance-tile-name"
+        data-testid={`compliance-analyzer-name-${analyzerId}`}
+      >
         {analyzerName}
       </h4>
 
       {/* Triggered rules */}
       {triggeredRules && triggeredRules.length > 0 && (
-        <div className="compliance-tile-rules" data-testid={`compliance-rules-${analyzerId}`}>
+        <div
+          className="compliance-tile-rules"
+          data-testid={`compliance-rules-${analyzerId}`}
+        >
           <span className="compliance-tile-rules-label">
             {intl.formatMessage({ id: "qc.dashboard.triggeredRules" })}:
           </span>
@@ -145,18 +156,24 @@ const ComplianceStatusTile = ({
 
       {/* Unresolved violations count */}
       {unresolvedViolationCount > 0 && (
-        <div className="compliance-tile-violations" data-testid={`compliance-violations-${analyzerId}`}>
+        <div
+          className="compliance-tile-violations"
+          data-testid={`compliance-violations-${analyzerId}`}
+        >
           <Tag type="red" size="sm">
             {intl.formatMessage(
               { id: "qc.dashboard.unresolvedViolations" },
-              { count: unresolvedViolationCount }
+              { count: unresolvedViolationCount },
             )}
           </Tag>
         </div>
       )}
 
       {/* Last result time (FR-048) */}
-      <div className="compliance-tile-last-result" data-testid={`compliance-last-result-${analyzerId}`}>
+      <div
+        className="compliance-tile-last-result"
+        data-testid={`compliance-last-result-${analyzerId}`}
+      >
         <span className="compliance-tile-last-result-label">
           {intl.formatMessage({ id: "qc.dashboard.lastResult" })}:
         </span>
@@ -187,7 +204,7 @@ ComplianceStatusTile.propTypes = {
       code: PropTypes.string,
       name: PropTypes.string,
       severity: PropTypes.string,
-    })
+    }),
   ),
   lastResultTime: PropTypes.string,
   unresolvedViolationCount: PropTypes.number,

@@ -104,3 +104,5 @@ docs/analyzers/012/
 specs/012-generic-astm-plugin-profiles/docs/
 
 # Miscellaneous dev artifacts
+.playwright-mcp/
+META-INF/

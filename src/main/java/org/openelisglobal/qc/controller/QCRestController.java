@@ -1,18 +1,24 @@
 package org.openelisglobal.qc.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.lang.reflect.InvocationTargetException;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.UUID;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.openelisglobal.common.log.LogEvent;
+import org.openelisglobal.common.rest.BaseRestController;
 import org.openelisglobal.internationalization.MessageUtil;
+import org.openelisglobal.qc.dto.InstrumentQCStatus;
+import org.openelisglobal.qc.dto.QCDashboardSummary;
 import org.openelisglobal.qc.form.QCControlLotForm;
 import org.openelisglobal.qc.form.WestgardRuleConfigForm;
 import org.openelisglobal.qc.service.QCControlLotService;
 import org.openelisglobal.qc.service.QCDashboardService;
-import org.openelisglobal.qc.service.QCDashboardService.DashboardSummary;
-import org.openelisglobal.qc.service.QCDashboardService.InstrumentComplianceStatus;
 import org.openelisglobal.qc.service.QCStatisticsService;
 import org.openelisglobal.qc.service.WestgardRuleConfigService;
 import org.openelisglobal.qc.valueholder.QCControlLot;
@@ -40,7 +46,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/rest/qc")
-public class QCRestController {
+public class QCRestController extends BaseRestController {
 
     private static final String[] ALLOWED_FIELDS = new String[] { "id", "productName", "lotNumber", "manufacturer",
             "controlLevel", "testId", "instrumentId", "calculationMethod", "initialRunsCount", "manufacturerMean",
@@ -76,6 +82,20 @@ public class QCRestController {
             return ResponseEntity.ok(controlLots);
         } catch (Exception e) {
             LogEvent.logError("QCRestController", "getActiveControlLots", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Get all control lots (all statuses). GET /rest/qc/control-lots
+     */
+    @GetMapping("/control-lots")
+    public ResponseEntity<List<QCControlLot>> getAllControlLots() {
+        try {
+            List<QCControlLot> lots = controlLotService.getAllControlLots();
+            return ResponseEntity.ok(lots);
+        } catch (Exception e) {
+            LogEvent.logError("QCRestController", "getAllControlLots", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -121,7 +141,8 @@ public class QCRestController {
      * Create or update a control lot. POST /rest/qc/controlLot
      */
     @PostMapping("/controlLot")
-    public ResponseEntity<Object> saveControlLot(@RequestBody @Valid QCControlLotForm form, BindingResult result)
+    public ResponseEntity<Object> saveControlLot(@RequestBody @Valid QCControlLotForm form, BindingResult result,
+            HttpServletRequest request)
             throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
 
         if (result.hasErrors()) {
@@ -132,11 +153,15 @@ public class QCRestController {
         try {
             QCControlLot controlLot;
             boolean isNew = StringUtils.isBlank(form.getId()) || "0".equals(form.getId());
+            String sysUserIdStr = getSysUserId(request);
+            Integer systemUserId = (sysUserIdStr != null) ? Integer.parseInt(sysUserIdStr) : 1;
 
             if (isNew) {
                 // Create new control lot
                 controlLot = new QCControlLot();
                 PropertyUtils.copyProperties(controlLot, form);
+                controlLot.setId(UUID.randomUUID().toString());
+                controlLot.setSystemUserId(systemUserId);
                 controlLot = controlLotService.createControlLot(controlLot);
             } else {
                 // Update existing control lot
@@ -145,7 +170,10 @@ public class QCRestController {
                     return ResponseEntity.status(HttpStatus.NOT_FOUND)
                             .body(MessageUtil.getMessage("error.notFound.controlLot"));
                 }
+                java.sql.Timestamp lastupdated = controlLot.getLastupdated();
                 PropertyUtils.copyProperties(controlLot, form);
+                controlLot.setLastupdated(lastupdated);
+                controlLot.setSystemUserId(systemUserId);
                 controlLotService.update(controlLot);
             }
 
@@ -401,12 +429,14 @@ public class QCRestController {
 
     /**
      * Get dashboard summary with aggregate violation counts. GET
-     * /rest/qc/dashboard/summary
+     * /rest/qc/dashboard/summary?months=1
      */
     @GetMapping("/dashboard/summary")
-    public ResponseEntity<DashboardSummary> getDashboardSummary() {
+    public ResponseEntity<QCDashboardSummary> getDashboardSummary(
+            @RequestParam(value = "months", defaultValue = "1") int months) {
         try {
-            DashboardSummary summary = dashboardService.getDashboardSummary();
+            Timestamp[] range = computeDateRange(months);
+            QCDashboardSummary summary = dashboardService.getDashboardSummary(range[0], range[1]);
             return ResponseEntity.ok(summary);
         } catch (Exception e) {
             LogEvent.logError("QCRestController", "getDashboardSummary", e.getMessage());
@@ -415,33 +445,45 @@ public class QCRestController {
     }
 
     /**
-     * Get compliance status for all instruments with unresolved violations. GET
-     * /rest/qc/dashboard/instruments
+     * Get compliance status for all instruments. GET
+     * /rest/qc/dashboard/instruments?months=1
      */
     @GetMapping("/dashboard/instruments")
-    public ResponseEntity<List<InstrumentComplianceStatus>> getAllInstrumentComplianceStatus() {
+    public ResponseEntity<List<InstrumentQCStatus>> getAllInstrumentQCStatus(
+            @RequestParam(value = "months", defaultValue = "1") int months) {
         try {
-            List<InstrumentComplianceStatus> statuses = dashboardService.getAllInstrumentComplianceStatus();
+            Timestamp[] range = computeDateRange(months);
+            List<InstrumentQCStatus> statuses = dashboardService.getAllInstrumentComplianceStatus(range[0], range[1]);
             return ResponseEntity.ok(statuses);
         } catch (Exception e) {
-            LogEvent.logError("QCRestController", "getAllInstrumentComplianceStatus", e.getMessage());
+            LogEvent.logError("QCRestController", "getAllInstrumentQCStatus", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     /**
      * Get compliance status for a specific instrument. GET
-     * /rest/qc/dashboard/instruments/{instrumentId}
+     * /rest/qc/dashboard/instruments/{instrumentId}?months=1
      */
     @GetMapping("/dashboard/instruments/{instrumentId}")
-    public ResponseEntity<InstrumentComplianceStatus> getInstrumentComplianceStatus(
-            @PathVariable("instrumentId") Integer instrumentId) {
+    public ResponseEntity<InstrumentQCStatus> getInstrumentQCStatus(@PathVariable("instrumentId") Integer instrumentId,
+            @RequestParam(value = "months", defaultValue = "1") int months) {
         try {
-            InstrumentComplianceStatus status = dashboardService.getInstrumentComplianceStatus(instrumentId);
+            Timestamp[] range = computeDateRange(months);
+            InstrumentQCStatus status = dashboardService.getInstrumentComplianceStatus(instrumentId, range[0],
+                    range[1]);
             return ResponseEntity.ok(status);
         } catch (Exception e) {
-            LogEvent.logError("QCRestController", "getInstrumentComplianceStatus", e.getMessage());
+            LogEvent.logError("QCRestController", "getInstrumentQCStatus", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    private Timestamp[] computeDateRange(int months) {
+        int clamped = Math.max(1, Math.min(months, 12));
+        Instant now = Instant.now();
+        Timestamp endDate = Timestamp.from(now);
+        Timestamp startDate = Timestamp.from(now.minus(clamped * 30L, ChronoUnit.DAYS));
+        return new Timestamp[] { startDate, endDate };
     }
 }

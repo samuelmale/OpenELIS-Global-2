@@ -201,6 +201,10 @@ public class WestgardRuleConfigServiceImpl extends BaseObjectServiceImpl<Westgar
             // REJECTION rules require corrective action
             config.setRequiresCorrectiveAction("REJECTION".equals(severity));
 
+            // Set system user ID for audit trail
+            config.setSysUserId("1");
+            config.setSystemUserId(1);
+
             String id = ruleConfigDAO.insert(config);
             defaultConfigs.add(ruleConfigDAO.get(id).get());
         }

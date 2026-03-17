@@ -1,8 +1,9 @@
 package org.openelisglobal.qc.dao;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import java.util.List;
-import org.hibernate.Session;
-import org.hibernate.query.Query;
 import org.openelisglobal.common.daoimpl.BaseDAOImpl;
 import org.openelisglobal.common.exception.LIMSRuntimeException;
 import org.openelisglobal.qc.valueholder.QCStatistics;
@@ -11,6 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * DAO implementation for QCStatistics entity.
+ *
+ * Uses JPA Criteria API instead of HQL because the project's
+ * ClassicQueryTranslatorFactory does not resolve JPA @Column annotations in HQL
+ * queries.
  */
 @Component
 @Transactional
@@ -22,13 +27,14 @@ public class QCStatisticsDAOImpl extends BaseDAOImpl<QCStatistics, String> imple
 
     @Override
     public QCStatistics findLatestByControlLot(String controlLotId) throws LIMSRuntimeException {
-        String hql = "FROM QCStatistics WHERE controlLotId = :controlLotId ORDER BY calculationDate DESC";
         try {
-            Session session = entityManager.unwrap(Session.class);
-            Query<QCStatistics> query = session.createQuery(hql, QCStatistics.class);
-            query.setParameter("controlLotId", controlLotId);
-            query.setMaxResults(1);
-            return query.uniqueResult();
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<QCStatistics> cq = cb.createQuery(QCStatistics.class);
+            Root<QCStatistics> root = cq.from(QCStatistics.class);
+            cq.where(cb.equal(root.get("controlLotId"), controlLotId));
+            cq.orderBy(cb.desc(root.get("calculationDate")));
+            List<QCStatistics> results = entityManager.createQuery(cq).setMaxResults(1).getResultList();
+            return results.isEmpty() ? null : results.get(0);
         } catch (RuntimeException e) {
             throw new LIMSRuntimeException("Error retrieving latest QC statistics", e);
         }
@@ -37,13 +43,14 @@ public class QCStatisticsDAOImpl extends BaseDAOImpl<QCStatistics, String> imple
     @Override
     public List<QCStatistics> findByCalculationMethod(String controlLotId, String calculationMethod)
             throws LIMSRuntimeException {
-        String hql = "FROM QCStatistics WHERE controlLotId = :controlLotId AND calculationMethod = :calculationMethod ORDER BY calculationDate DESC";
         try {
-            Session session = entityManager.unwrap(Session.class);
-            Query<QCStatistics> query = session.createQuery(hql, QCStatistics.class);
-            query.setParameter("controlLotId", controlLotId);
-            query.setParameter("calculationMethod", calculationMethod);
-            return query.list();
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<QCStatistics> cq = cb.createQuery(QCStatistics.class);
+            Root<QCStatistics> root = cq.from(QCStatistics.class);
+            cq.where(cb.and(cb.equal(root.get("controlLotId"), controlLotId),
+                    cb.equal(root.get("calculationMethod"), calculationMethod)));
+            cq.orderBy(cb.desc(root.get("calculationDate")));
+            return entityManager.createQuery(cq).getResultList();
         } catch (RuntimeException e) {
             throw new LIMSRuntimeException("Error retrieving QC statistics by calculation method", e);
         }
@@ -51,12 +58,13 @@ public class QCStatisticsDAOImpl extends BaseDAOImpl<QCStatistics, String> imple
 
     @Override
     public List<QCStatistics> findAllByControlLot(String controlLotId) throws LIMSRuntimeException {
-        String hql = "FROM QCStatistics WHERE controlLotId = :controlLotId ORDER BY calculationDate DESC";
         try {
-            Session session = entityManager.unwrap(Session.class);
-            Query<QCStatistics> query = session.createQuery(hql, QCStatistics.class);
-            query.setParameter("controlLotId", controlLotId);
-            return query.list();
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<QCStatistics> cq = cb.createQuery(QCStatistics.class);
+            Root<QCStatistics> root = cq.from(QCStatistics.class);
+            cq.where(cb.equal(root.get("controlLotId"), controlLotId));
+            cq.orderBy(cb.desc(root.get("calculationDate")));
+            return entityManager.createQuery(cq).getResultList();
         } catch (RuntimeException e) {
             throw new LIMSRuntimeException("Error retrieving all QC statistics for control lot", e);
         }

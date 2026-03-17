@@ -1,17 +1,20 @@
 package org.openelisglobal.qc.event;
 
 import java.util.List;
+import java.util.Optional;
 import org.openelisglobal.common.log.LogEvent;
+import org.openelisglobal.qc.dao.QCResultDAO;
 import org.openelisglobal.qc.service.QCRuleViolationService;
 import org.openelisglobal.qc.service.WestgardRuleEvaluationService;
 import org.openelisglobal.qc.service.evaluator.RuleEvaluationResult;
 import org.openelisglobal.qc.valueholder.QCResult;
 import org.openelisglobal.qc.valueholder.QCRuleViolation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 /**
  * Event listener for QCResultCreatedEvent (T098/T099/T109).
@@ -29,14 +32,17 @@ public class QCResultCreatedEventListener {
     @Autowired
     private QCRuleViolationService violationService;
 
+    @Autowired
+    private QCResultDAO resultDAO;
+
     /**
      * Handle QCResultCreatedEvent asynchronously.
      *
      * @param event The event containing the new QC result
      */
     @Async
-    @EventListener
-    @Transactional
+    @TransactionalEventListener
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleQCResultCreated(QCResultCreatedEvent event) {
         QCResult result = event.getResult();
 
@@ -63,12 +69,25 @@ public class QCResultCreatedEventListener {
                 }
             }
 
+            // Update result_status: REJECTED if any REJECTION-severity violation, ACCEPTED
+            // otherwise
+            boolean hasRejection = evaluationResults.stream()
+                    .anyMatch(r -> r.isViolated() && "REJECTION".equals(r.getSeverity()));
+            String newStatus = hasRejection ? "REJECTED" : "ACCEPTED";
+
+            Optional<QCResult> freshResult = resultDAO.get(result.getId());
+            if (freshResult.isPresent()) {
+                QCResult toUpdate = freshResult.get();
+                toUpdate.setResultStatus(newStatus);
+                resultDAO.update(toUpdate);
+            }
+
             if (violationsCreated > 0) {
-                LogEvent.logInfo(this.getClass().getName(), "handleQCResultCreated",
-                        "Created " + violationsCreated + " violation(s) for result: " + result.getId());
+                LogEvent.logInfo(this.getClass().getName(), "handleQCResultCreated", "Created " + violationsCreated
+                        + " violation(s) for result: " + result.getId() + ", status → " + newStatus);
             } else {
                 LogEvent.logInfo(this.getClass().getName(), "handleQCResultCreated",
-                        "No violations detected for result: " + result.getId());
+                        "No violations detected for result: " + result.getId() + ", status → ACCEPTED");
             }
 
         } catch (Exception e) {

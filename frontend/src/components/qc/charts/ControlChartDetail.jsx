@@ -59,10 +59,22 @@ const ControlChartDetail = () => {
 
   // Control level options
   const controlLevelOptions = [
-    { id: "ALL", label: intl.formatMessage({ id: "qc.chart.filter.allLevels" }) },
-    { id: "LOW", label: intl.formatMessage({ id: "qc.chart.filter.levelLow" }) },
-    { id: "NORMAL", label: intl.formatMessage({ id: "qc.chart.filter.levelNormal" }) },
-    { id: "HIGH", label: intl.formatMessage({ id: "qc.chart.filter.levelHigh" }) },
+    {
+      id: "ALL",
+      label: intl.formatMessage({ id: "qc.chart.filter.allLevels" }),
+    },
+    {
+      id: "LOW",
+      label: intl.formatMessage({ id: "qc.chart.filter.levelLow" }),
+    },
+    {
+      id: "NORMAL",
+      label: intl.formatMessage({ id: "qc.chart.filter.levelNormal" }),
+    },
+    {
+      id: "HIGH",
+      label: intl.formatMessage({ id: "qc.chart.filter.levelHigh" }),
+    },
   ];
 
   // Load chart data
@@ -149,7 +161,9 @@ const ControlChartDetail = () => {
         link.click();
       };
 
-      img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
+      img.src =
+        "data:image/svg+xml;base64," +
+        btoa(unescape(encodeURIComponent(svgData)));
     }
   };
 
@@ -168,12 +182,15 @@ const ControlChartDetail = () => {
 
   // Navigate back to dashboard
   const handleBackToDashboard = () => {
-    history.push("/analyzers/qc");
+    history.push("/analyzers/qc/db");
   };
 
   if (loading && chartData.length === 0) {
     return (
-      <div className="control-chart-detail-loading" data-testid="control-chart-detail-loading">
+      <div
+        className="control-chart-detail-loading"
+        data-testid="control-chart-detail-loading"
+      >
         <Loading
           description={intl.formatMessage({ id: "qc.chart.loading" })}
           withOverlay={false}
@@ -185,7 +202,10 @@ const ControlChartDetail = () => {
   return (
     <div className="control-chart-detail" data-testid="control-chart-detail">
       {/* Header */}
-      <div className="control-chart-detail-header" data-testid="control-chart-detail-header">
+      <div
+        className="control-chart-detail-header"
+        data-testid="control-chart-detail-header"
+      >
         <PageTitle
           breadcrumbs={[
             {
@@ -194,10 +214,12 @@ const ControlChartDetail = () => {
             },
             {
               label: intl.formatMessage({ id: "qc.dashboard.title" }),
-              link: "/analyzers/qc",
+              link: "/analyzers/qc/db",
             },
             {
-              label: analyzerInfo?.name || intl.formatMessage({ id: "qc.chart.title" }),
+              label:
+                analyzerInfo?.name ||
+                intl.formatMessage({ id: "qc.chart.title" }),
             },
           ]}
           subtitle={intl.formatMessage({ id: "qc.chart.subtitle" })}
@@ -216,7 +238,10 @@ const ControlChartDetail = () => {
       )}
 
       {/* Filters */}
-      <Grid className="control-chart-detail-filters" data-testid="control-chart-detail-filters">
+      <Grid
+        className="control-chart-detail-filters"
+        data-testid="control-chart-detail-filters"
+      >
         <Column lg={6} md={4} sm={4}>
           <DatePicker
             datePickerType="range"
@@ -227,7 +252,9 @@ const ControlChartDetail = () => {
             <DatePickerInput
               id="date-picker-start"
               placeholder="yyyy-mm-dd"
-              labelText={intl.formatMessage({ id: "qc.chart.filter.startDate" })}
+              labelText={intl.formatMessage({
+                id: "qc.chart.filter.startDate",
+              })}
               data-testid="chart-filter-start-date"
             />
             <DatePickerInput
@@ -241,11 +268,15 @@ const ControlChartDetail = () => {
         <Column lg={3} md={2} sm={4}>
           <Dropdown
             id="control-level-dropdown"
-            titleText={intl.formatMessage({ id: "qc.chart.filter.controlLevel" })}
+            titleText={intl.formatMessage({
+              id: "qc.chart.filter.controlLevel",
+            })}
             label={intl.formatMessage({ id: "qc.chart.filter.selectLevel" })}
             items={controlLevelOptions}
             itemToString={(item) => item?.label || ""}
-            selectedItem={controlLevelOptions.find((o) => o.id === selectedControlLevel)}
+            selectedItem={controlLevelOptions.find(
+              (o) => o.id === selectedControlLevel,
+            )}
             onChange={handleControlLevelChange}
             data-testid="chart-filter-control-level"
           />
@@ -256,14 +287,25 @@ const ControlChartDetail = () => {
             titleText={intl.formatMessage({ id: "qc.chart.filter.controlLot" })}
             label={intl.formatMessage({ id: "qc.chart.filter.selectLot" })}
             items={[
-              { id: null, label: intl.formatMessage({ id: "qc.chart.filter.allLots" }) },
-              ...controlLots.map((lot) => ({ id: lot.id, label: lot.lotNumber })),
+              {
+                id: null,
+                label: intl.formatMessage({ id: "qc.chart.filter.allLots" }),
+              },
+              ...controlLots.map((lot) => ({
+                id: lot.id,
+                label: lot.lotNumber,
+              })),
             ]}
             itemToString={(item) => item?.label || ""}
             selectedItem={
               selectedControlLot
                 ? controlLots.find((l) => l.id === selectedControlLot)
-                : { id: null, label: intl.formatMessage({ id: "qc.chart.filter.allLots" }) }
+                : {
+                    id: null,
+                    label: intl.formatMessage({
+                      id: "qc.chart.filter.allLots",
+                    }),
+                  }
             }
             onChange={handleControlLotChange}
             data-testid="chart-filter-control-lot"
@@ -275,7 +317,9 @@ const ControlChartDetail = () => {
               kind="ghost"
               size="sm"
               renderIcon={ZoomIn}
-              iconDescription={intl.formatMessage({ id: "qc.chart.action.zoomIn" })}
+              iconDescription={intl.formatMessage({
+                id: "qc.chart.action.zoomIn",
+              })}
               onClick={handleZoomIn}
               data-testid="chart-zoom-in"
             />
@@ -283,7 +327,9 @@ const ControlChartDetail = () => {
               kind="ghost"
               size="sm"
               renderIcon={ZoomOut}
-              iconDescription={intl.formatMessage({ id: "qc.chart.action.zoomOut" })}
+              iconDescription={intl.formatMessage({
+                id: "qc.chart.action.zoomOut",
+              })}
               onClick={handleZoomOut}
               data-testid="chart-zoom-out"
             />
@@ -291,7 +337,9 @@ const ControlChartDetail = () => {
               kind="ghost"
               size="sm"
               renderIcon={FitToScreen}
-              iconDescription={intl.formatMessage({ id: "qc.chart.action.zoomReset" })}
+              iconDescription={intl.formatMessage({
+                id: "qc.chart.action.zoomReset",
+              })}
               onClick={handleZoomReset}
               data-testid="chart-zoom-reset"
             />
@@ -311,7 +359,9 @@ const ControlChartDetail = () => {
       {/* Chart with control levels as tabs (FR-058) */}
       {selectedControlLevel === "ALL" && controlLots.length > 0 ? (
         <Tabs>
-          <TabList aria-label={intl.formatMessage({ id: "qc.chart.tabs.label" })}>
+          <TabList
+            aria-label={intl.formatMessage({ id: "qc.chart.tabs.label" })}
+          >
             {controlLevelOptions
               .filter((level) => level.id !== "ALL")
               .map((level) => (
@@ -325,14 +375,17 @@ const ControlChartDetail = () => {
               .filter((level) => level.id !== "ALL")
               .map((level) => {
                 const levelData = chartData.filter(
-                  (d) => d.controlLevel?.toUpperCase() === level.id
+                  (d) => d.controlLevel?.toUpperCase() === level.id,
                 );
                 const levelStats = statistics?.[level.id] || statistics;
                 return (
                   <TabPanel key={level.id}>
                     <div
                       className="control-chart-detail-chart"
-                      style={{ transform: `scale(${zoomLevel})`, transformOrigin: "top left" }}
+                      style={{
+                        transform: `scale(${zoomLevel})`,
+                        transformOrigin: "top left",
+                      }}
                       data-testid={`chart-panel-${level.id}`}
                     >
                       <LeveyJenningsChart
@@ -349,7 +402,10 @@ const ControlChartDetail = () => {
       ) : (
         <div
           className="control-chart-detail-chart"
-          style={{ transform: `scale(${zoomLevel})`, transformOrigin: "top left" }}
+          style={{
+            transform: `scale(${zoomLevel})`,
+            transformOrigin: "top left",
+          }}
           data-testid="chart-panel-single"
         >
           <LeveyJenningsChart
@@ -362,33 +418,53 @@ const ControlChartDetail = () => {
 
       {/* Statistics summary */}
       {statistics && (
-        <Grid className="control-chart-detail-stats" data-testid="control-chart-detail-stats">
+        <Grid
+          className="control-chart-detail-stats"
+          data-testid="control-chart-detail-stats"
+        >
           <Column lg={4} md={2} sm={4}>
             <div className="stat-item">
-              <span className="stat-label">{intl.formatMessage({ id: "qc.chart.stats.mean" })}</span>
-              <span className="stat-value">{statistics.mean?.toFixed(2) || "-"}</span>
+              <span className="stat-label">
+                {intl.formatMessage({ id: "qc.chart.stats.mean" })}
+              </span>
+              <span className="stat-value">
+                {statistics.mean?.toFixed(2) || "-"}
+              </span>
             </div>
           </Column>
           <Column lg={4} md={2} sm={4}>
             <div className="stat-item">
-              <span className="stat-label">{intl.formatMessage({ id: "qc.chart.stats.sd" })}</span>
-              <span className="stat-value">{statistics.standardDeviation?.toFixed(2) || "-"}</span>
+              <span className="stat-label">
+                {intl.formatMessage({ id: "qc.chart.stats.sd" })}
+              </span>
+              <span className="stat-value">
+                {statistics.standardDeviation?.toFixed(2) || "-"}
+              </span>
             </div>
           </Column>
           <Column lg={4} md={2} sm={4}>
             <div className="stat-item">
-              <span className="stat-label">{intl.formatMessage({ id: "qc.chart.stats.cv" })}</span>
+              <span className="stat-label">
+                {intl.formatMessage({ id: "qc.chart.stats.cv" })}
+              </span>
               <span className="stat-value">
                 {statistics.mean && statistics.standardDeviation
-                  ? ((statistics.standardDeviation / statistics.mean) * 100).toFixed(2) + "%"
+                  ? (
+                      (statistics.standardDeviation / statistics.mean) *
+                      100
+                    ).toFixed(2) + "%"
                   : "-"}
               </span>
             </div>
           </Column>
           <Column lg={4} md={2} sm={4}>
             <div className="stat-item">
-              <span className="stat-label">{intl.formatMessage({ id: "qc.chart.stats.n" })}</span>
-              <span className="stat-value">{statistics.n || chartData.length}</span>
+              <span className="stat-label">
+                {intl.formatMessage({ id: "qc.chart.stats.n" })}
+              </span>
+              <span className="stat-value">
+                {statistics.n || chartData.length}
+              </span>
             </div>
           </Column>
         </Grid>

@@ -55,6 +55,10 @@ public class QCRuleViolation extends BaseObject<String> {
     @Column(name = "resolution_notes", columnDefinition = "TEXT")
     private String resolutionNotes;
 
+    @NotNull
+    @Column(name = "sys_user_id", nullable = false)
+    private Integer systemUserId;
+
     public QCRuleViolation() {
     }
 
@@ -146,5 +150,13 @@ public class QCRuleViolation extends BaseObject<String> {
 
     public void setResolutionNotes(String resolutionNotes) {
         this.resolutionNotes = resolutionNotes;
+    }
+
+    public Integer getSystemUserId() {
+        return systemUserId;
+    }
+
+    public void setSystemUserId(Integer systemUserId) {
+        this.systemUserId = systemUserId;
     }
 }

@@ -59,6 +59,9 @@ public class QCResult extends BaseObject<String> {
     @Column(name = "external_notes", columnDefinition = "TEXT")
     private String externalNotes;
 
+    @Column(name = "sys_user_id", nullable = false)
+    private Integer systemUserId;
+
     public QCResult() {
     }
 
@@ -158,5 +161,13 @@ public class QCResult extends BaseObject<String> {
 
     public void setExternalNotes(String externalNotes) {
         this.externalNotes = externalNotes;
+    }
+
+    public Integer getSystemUserId() {
+        return systemUserId;
+    }
+
+    public void setSystemUserId(Integer systemUserId) {
+        this.systemUserId = systemUserId;
     }
 }

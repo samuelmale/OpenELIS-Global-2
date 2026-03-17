@@ -43,6 +43,7 @@ public class QCViolationForm {
     private String testName;
     private String resolvedByUserName;
     private String ruleDescription;
+    private Timestamp acknowledgedDate;
 
     public QCViolationForm() {
     }
@@ -165,6 +166,14 @@ public class QCViolationForm {
 
     public void setRuleDescription(String ruleDescription) {
         this.ruleDescription = ruleDescription;
+    }
+
+    public Timestamp getAcknowledgedDate() {
+        return acknowledgedDate;
+    }
+
+    public void setAcknowledgedDate(Timestamp acknowledgedDate) {
+        this.acknowledgedDate = acknowledgedDate;
     }
 
     /**

@@ -25,4 +25,5 @@
   <include file="liquibase/qc/003-create-qc-violation-tables.xml" />
   <include file="liquibase/qc/004-create-qc-corrective-action.xml" />
   <include file="liquibase/qc/005-create-qc-alert.xml" />
+  <include file="liquibase/qc/006-fix-lastupdated-column.xml" />
 </databaseChangeLog>

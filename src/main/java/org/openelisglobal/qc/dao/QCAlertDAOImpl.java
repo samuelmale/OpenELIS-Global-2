@@ -1,8 +1,9 @@
 package org.openelisglobal.qc.dao;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import java.util.List;
-import org.hibernate.Session;
-import org.hibernate.query.Query;
 import org.openelisglobal.common.daoimpl.BaseDAOImpl;
 import org.openelisglobal.common.exception.LIMSRuntimeException;
 import org.openelisglobal.qc.valueholder.QCAlert;
@@ -22,12 +23,13 @@ public class QCAlertDAOImpl extends BaseDAOImpl<QCAlert, String> implements QCAl
 
     @Override
     public List<QCAlert> findByViolation(String violationId) throws LIMSRuntimeException {
-        String hql = "FROM QCAlert WHERE violationId = :violationId ORDER BY sentDateTime DESC";
         try {
-            Session session = entityManager.unwrap(Session.class);
-            Query<QCAlert> query = session.createQuery(hql, QCAlert.class);
-            query.setParameter("violationId", violationId);
-            return query.list();
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<QCAlert> cq = cb.createQuery(QCAlert.class);
+            Root<QCAlert> root = cq.from(QCAlert.class);
+            cq.where(cb.equal(root.get("violationId"), violationId));
+            cq.orderBy(cb.desc(root.get("sentDateTime")));
+            return entityManager.createQuery(cq).getResultList();
         } catch (RuntimeException e) {
             throw new LIMSRuntimeException("Error retrieving QC alerts by violation", e);
         }
@@ -35,12 +37,13 @@ public class QCAlertDAOImpl extends BaseDAOImpl<QCAlert, String> implements QCAl
 
     @Override
     public List<QCAlert> findByRecipient(Integer userId) throws LIMSRuntimeException {
-        String hql = "FROM QCAlert WHERE recipientUserId = :userId ORDER BY sentDateTime DESC";
         try {
-            Session session = entityManager.unwrap(Session.class);
-            Query<QCAlert> query = session.createQuery(hql, QCAlert.class);
-            query.setParameter("userId", userId);
-            return query.list();
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<QCAlert> cq = cb.createQuery(QCAlert.class);
+            Root<QCAlert> root = cq.from(QCAlert.class);
+            cq.where(cb.equal(root.get("recipientUserId"), userId));
+            cq.orderBy(cb.desc(root.get("sentDateTime")));
+            return entityManager.createQuery(cq).getResultList();
         } catch (RuntimeException e) {
             throw new LIMSRuntimeException("Error retrieving QC alerts by recipient", e);
         }
@@ -48,12 +51,13 @@ public class QCAlertDAOImpl extends BaseDAOImpl<QCAlert, String> implements QCAl
 
     @Override
     public List<QCAlert> findUnreadByRecipient(Integer userId) throws LIMSRuntimeException {
-        String hql = "FROM QCAlert WHERE recipientUserId = :userId AND readStatus = false ORDER BY sentDateTime DESC";
         try {
-            Session session = entityManager.unwrap(Session.class);
-            Query<QCAlert> query = session.createQuery(hql, QCAlert.class);
-            query.setParameter("userId", userId);
-            return query.list();
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<QCAlert> cq = cb.createQuery(QCAlert.class);
+            Root<QCAlert> root = cq.from(QCAlert.class);
+            cq.where(cb.equal(root.get("recipientUserId"), userId), cb.equal(root.get("readStatus"), false));
+            cq.orderBy(cb.desc(root.get("sentDateTime")));
+            return entityManager.createQuery(cq).getResultList();
         } catch (RuntimeException e) {
             throw new LIMSRuntimeException("Error retrieving unread QC alerts by recipient", e);
         }
@@ -61,12 +65,13 @@ public class QCAlertDAOImpl extends BaseDAOImpl<QCAlert, String> implements QCAl
 
     @Override
     public List<QCAlert> findByReadStatus(Boolean readStatus) throws LIMSRuntimeException {
-        String hql = "FROM QCAlert WHERE readStatus = :readStatus ORDER BY sentDateTime DESC";
         try {
-            Session session = entityManager.unwrap(Session.class);
-            Query<QCAlert> query = session.createQuery(hql, QCAlert.class);
-            query.setParameter("readStatus", readStatus);
-            return query.list();
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<QCAlert> cq = cb.createQuery(QCAlert.class);
+            Root<QCAlert> root = cq.from(QCAlert.class);
+            cq.where(cb.equal(root.get("readStatus"), readStatus));
+            cq.orderBy(cb.desc(root.get("sentDateTime")));
+            return entityManager.createQuery(cq).getResultList();
         } catch (RuntimeException e) {
             throw new LIMSRuntimeException("Error retrieving QC alerts by read status", e);
         }

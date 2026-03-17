@@ -54,20 +54,45 @@ const CorrectiveActionForm = () => {
 
   // Action type options (FR-039)
   const actionTypeOptions = [
-    { id: "RECALIBRATION", label: intl.formatMessage({ id: "qc.correctiveAction.type.recalibration" }) },
-    { id: "MAINTENANCE", label: intl.formatMessage({ id: "qc.correctiveAction.type.maintenance" }) },
-    { id: "REPEAT_CONTROL", label: intl.formatMessage({ id: "qc.correctiveAction.type.repeatControl" }) },
-    { id: "REAGENT_CHANGE", label: intl.formatMessage({ id: "qc.correctiveAction.type.reagentChange" }) },
-    { id: "OTHER", label: intl.formatMessage({ id: "qc.correctiveAction.type.other" }) },
+    {
+      id: "RECALIBRATION",
+      label: intl.formatMessage({
+        id: "qc.correctiveAction.type.recalibration",
+      }),
+    },
+    {
+      id: "MAINTENANCE",
+      label: intl.formatMessage({ id: "qc.correctiveAction.type.maintenance" }),
+    },
+    {
+      id: "REPEAT_CONTROL",
+      label: intl.formatMessage({
+        id: "qc.correctiveAction.type.repeatControl",
+      }),
+    },
+    {
+      id: "REAGENT_CHANGE",
+      label: intl.formatMessage({
+        id: "qc.correctiveAction.type.reagentChange",
+      }),
+    },
+    {
+      id: "OTHER",
+      label: intl.formatMessage({ id: "qc.correctiveAction.type.other" }),
+    },
   ];
 
   // Validation schema
   const validationSchema = Yup.object().shape({
     actionType: Yup.string().required(
-      intl.formatMessage({ id: "qc.correctiveAction.validation.actionTypeRequired" })
+      intl.formatMessage({
+        id: "qc.correctiveAction.validation.actionTypeRequired",
+      }),
     ),
     description: Yup.string().required(
-      intl.formatMessage({ id: "qc.correctiveAction.validation.descriptionRequired" })
+      intl.formatMessage({
+        id: "qc.correctiveAction.validation.descriptionRequired",
+      }),
     ),
     assignedUserId: Yup.string().nullable(),
   });
@@ -76,14 +101,17 @@ const CorrectiveActionForm = () => {
   useEffect(() => {
     if (violationId) {
       setLoading(true);
-      getFromOpenElisServer(`/rest/qc/violations/${violationId}`, (response) => {
-        if (response && response.data) {
-          setViolation(response.data);
-        } else if (response && response.id) {
-          setViolation(response);
-        }
-        setLoading(false);
-      });
+      getFromOpenElisServer(
+        `/rest/qc/violations/${violationId}`,
+        (response) => {
+          if (response && response.data) {
+            setViolation(response.data);
+          } else if (response && response.id) {
+            setViolation(response);
+          }
+          setLoading(false);
+        },
+      );
     }
   }, [violationId]);
 
@@ -127,15 +155,24 @@ const CorrectiveActionForm = () => {
               // Navigate back to violations list or corrective actions list
               history.push("/analyzers/qc/corrective-actions");
             } else {
-              setError(data.error || intl.formatMessage({ id: "qc.correctiveAction.error.createFailed" }));
+              setError(
+                data.error ||
+                  intl.formatMessage({
+                    id: "qc.correctiveAction.error.createFailed",
+                  }),
+              );
             }
           });
         } else {
-          setError(intl.formatMessage({ id: "qc.correctiveAction.error.createFailed" }));
+          setError(
+            intl.formatMessage({
+              id: "qc.correctiveAction.error.createFailed",
+            }),
+          );
         }
         setSubmitting(false);
         setFormSubmitting(false);
-      }
+      },
     );
   };
 
@@ -146,9 +183,14 @@ const CorrectiveActionForm = () => {
 
   if (loading) {
     return (
-      <div className="corrective-action-form-loading" data-testid="corrective-action-form-loading">
+      <div
+        className="corrective-action-form-loading"
+        data-testid="corrective-action-form-loading"
+      >
         <Loading
-          description={intl.formatMessage({ id: "qc.correctiveAction.loading" })}
+          description={intl.formatMessage({
+            id: "qc.correctiveAction.loading",
+          })}
           withOverlay={false}
         />
       </div>
@@ -156,9 +198,15 @@ const CorrectiveActionForm = () => {
   }
 
   return (
-    <div className="corrective-action-form" data-testid="corrective-action-form">
+    <div
+      className="corrective-action-form"
+      data-testid="corrective-action-form"
+    >
       {/* Header */}
-      <div className="corrective-action-form-header" data-testid="corrective-action-form-header">
+      <div
+        className="corrective-action-form-header"
+        data-testid="corrective-action-form-header"
+      >
         <PageTitle
           breadcrumbs={[
             {
@@ -167,17 +215,21 @@ const CorrectiveActionForm = () => {
             },
             {
               label: intl.formatMessage({ id: "qc.dashboard.title" }),
-              link: "/analyzers/qc",
+              link: "/analyzers/qc/db",
             },
             {
               label: intl.formatMessage({ id: "qc.correctiveActions.title" }),
               link: "/analyzers/qc/corrective-actions",
             },
             {
-              label: intl.formatMessage({ id: "qc.correctiveAction.new.title" }),
+              label: intl.formatMessage({
+                id: "qc.correctiveAction.new.title",
+              }),
             },
           ]}
-          subtitle={intl.formatMessage({ id: "qc.correctiveAction.new.subtitle" })}
+          subtitle={intl.formatMessage({
+            id: "qc.correctiveAction.new.subtitle",
+          })}
         />
       </div>
 
@@ -194,24 +246,37 @@ const CorrectiveActionForm = () => {
 
       {/* Violation info */}
       {violation && (
-        <div className="corrective-action-form-violation-info" data-testid="corrective-action-form-violation-info">
-          <h4>{intl.formatMessage({ id: "qc.correctiveAction.violationInfo" })}</h4>
+        <div
+          className="corrective-action-form-violation-info"
+          data-testid="corrective-action-form-violation-info"
+        >
+          <h4>
+            {intl.formatMessage({ id: "qc.correctiveAction.violationInfo" })}
+          </h4>
           <Grid>
             <Column lg={4} md={4} sm={4}>
               <div className="info-item">
-                <span className="info-label">{intl.formatMessage({ id: "qc.violations.detail.rule" })}</span>
+                <span className="info-label">
+                  {intl.formatMessage({ id: "qc.violations.detail.rule" })}
+                </span>
                 <span className="info-value">{violation.ruleCode}</span>
               </div>
             </Column>
             <Column lg={4} md={4} sm={4}>
               <div className="info-item">
-                <span className="info-label">{intl.formatMessage({ id: "qc.violations.detail.analyzer" })}</span>
-                <span className="info-value">{violation.analyzerName || violation.analyzer?.name || "-"}</span>
+                <span className="info-label">
+                  {intl.formatMessage({ id: "qc.violations.detail.analyzer" })}
+                </span>
+                <span className="info-value">
+                  {violation.analyzerName || violation.analyzer?.name || "-"}
+                </span>
               </div>
             </Column>
             <Column lg={4} md={4} sm={4}>
               <div className="info-item">
-                <span className="info-label">{intl.formatMessage({ id: "qc.violations.detail.severity" })}</span>
+                <span className="info-label">
+                  {intl.formatMessage({ id: "qc.violations.detail.severity" })}
+                </span>
                 <span className="info-value">{violation.severity}</span>
               </div>
             </Column>
@@ -235,19 +300,30 @@ const CorrectiveActionForm = () => {
           setFieldValue,
           isSubmitting,
         }) => (
-          <Form onSubmit={handleSubmit} data-testid="corrective-action-form-form">
+          <Form
+            onSubmit={handleSubmit}
+            data-testid="corrective-action-form-form"
+          >
             <Grid>
               {/* Action Type (FR-039) */}
               <Column lg={8} md={4} sm={4}>
                 <FormGroup legendText="">
                   <Dropdown
                     id="action-type"
-                    titleText={intl.formatMessage({ id: "qc.correctiveAction.field.actionType" })}
-                    label={intl.formatMessage({ id: "qc.correctiveAction.field.selectActionType" })}
+                    titleText={intl.formatMessage({
+                      id: "qc.correctiveAction.field.actionType",
+                    })}
+                    label={intl.formatMessage({
+                      id: "qc.correctiveAction.field.selectActionType",
+                    })}
                     items={actionTypeOptions}
                     itemToString={(item) => item?.label || ""}
-                    selectedItem={actionTypeOptions.find((o) => o.id === values.actionType)}
-                    onChange={({ selectedItem }) => setFieldValue("actionType", selectedItem?.id || "")}
+                    selectedItem={actionTypeOptions.find(
+                      (o) => o.id === values.actionType,
+                    )}
+                    onChange={({ selectedItem }) =>
+                      setFieldValue("actionType", selectedItem?.id || "")
+                    }
                     invalid={touched.actionType && !!errors.actionType}
                     invalidText={errors.actionType}
                     data-testid="corrective-action-type-dropdown"
@@ -260,12 +336,22 @@ const CorrectiveActionForm = () => {
                 <FormGroup legendText="">
                   <ComboBox
                     id="assigned-user"
-                    titleText={intl.formatMessage({ id: "qc.correctiveAction.field.assignedUser" })}
-                    placeholder={intl.formatMessage({ id: "qc.correctiveAction.field.selectUser" })}
+                    titleText={intl.formatMessage({
+                      id: "qc.correctiveAction.field.assignedUser",
+                    })}
+                    placeholder={intl.formatMessage({
+                      id: "qc.correctiveAction.field.selectUser",
+                    })}
                     items={users}
-                    itemToString={(item) => item?.displayName || item?.name || ""}
-                    selectedItem={users.find((u) => u.id === values.assignedUserId)}
-                    onChange={({ selectedItem }) => setFieldValue("assignedUserId", selectedItem?.id || null)}
+                    itemToString={(item) =>
+                      item?.displayName || item?.name || ""
+                    }
+                    selectedItem={users.find(
+                      (u) => u.id === values.assignedUserId,
+                    )}
+                    onChange={({ selectedItem }) =>
+                      setFieldValue("assignedUserId", selectedItem?.id || null)
+                    }
                     data-testid="corrective-action-user-combobox"
                   />
                 </FormGroup>
@@ -277,8 +363,12 @@ const CorrectiveActionForm = () => {
                   <TextArea
                     id="description"
                     name="description"
-                    labelText={intl.formatMessage({ id: "qc.correctiveAction.field.description" })}
-                    placeholder={intl.formatMessage({ id: "qc.correctiveAction.field.descriptionPlaceholder" })}
+                    labelText={intl.formatMessage({
+                      id: "qc.correctiveAction.field.description",
+                    })}
+                    placeholder={intl.formatMessage({
+                      id: "qc.correctiveAction.field.descriptionPlaceholder",
+                    })}
                     value={values.description}
                     onChange={handleChange}
                     onBlur={handleBlur}

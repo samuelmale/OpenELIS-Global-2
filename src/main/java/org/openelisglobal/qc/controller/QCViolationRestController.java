@@ -3,10 +3,16 @@ package org.openelisglobal.qc.controller;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.openelisglobal.analyzer.service.AnalyzerService;
+import org.openelisglobal.analyzer.valueholder.Analyzer;
 import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.qc.form.QCViolationForm;
 import org.openelisglobal.qc.service.QCRuleViolationService;
 import org.openelisglobal.qc.valueholder.QCRuleViolation;
+import org.openelisglobal.systemuser.service.SystemUserService;
+import org.openelisglobal.systemuser.valueholder.SystemUser;
+import org.openelisglobal.test.service.TestService;
+import org.openelisglobal.test.valueholder.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,8 +33,19 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/rest/qc/violations")
 public class QCViolationRestController {
 
+    private static final String STATUS_ACKNOWLEDGED = "ACKNOWLEDGED";
+
     @Autowired
     private QCRuleViolationService violationService;
+
+    @Autowired
+    private AnalyzerService analyzerService;
+
+    @Autowired
+    private TestService testService;
+
+    @Autowired
+    private SystemUserService systemUserService;
 
     /**
      * Get all violations with optional filtering.
@@ -54,8 +71,8 @@ public class QCViolationRestController {
         } else if (unresolved) {
             violations = violationService.findUnresolved();
         } else {
-            // Default: return unresolved violations
-            violations = violationService.findUnresolved();
+            // return all violations
+            violations = violationService.findAll();
         }
 
         List<QCViolationForm> forms = violations.stream().map(this::toForm).collect(Collectors.toList());
@@ -163,6 +180,48 @@ public class QCViolationRestController {
 
         // Add rule description for common rules
         form.setRuleDescription(getRuleDescription(violation.getRuleCode()));
+
+        // Resolve instrument and test names from IDs
+        if (violation.getInstrumentId() != null) {
+            try {
+                Analyzer analyzer = analyzerService.get(String.valueOf(violation.getInstrumentId()));
+                if (analyzer != null) {
+                    form.setInstrumentName(analyzer.getName());
+                }
+            } catch (Exception e) {
+                LogEvent.logWarn(this.getClass().getName(), "toForm",
+                        "Could not resolve analyzer name for ID " + violation.getInstrumentId());
+            }
+        }
+
+        if (violation.getTestId() != null) {
+            try {
+                Test test = testService.get(String.valueOf(violation.getTestId()));
+                if (test != null) {
+                    form.setTestName(test.getName());
+                }
+            } catch (Exception e) {
+                LogEvent.logWarn(this.getClass().getName(), "toForm",
+                        "Could not resolve test name for ID " + violation.getTestId());
+            }
+        }
+
+        // Resolve user name and acknowledged date
+        if (violation.getResolvedByUserId() != null) {
+            try {
+                SystemUser user = systemUserService.getUserById(String.valueOf(violation.getResolvedByUserId()));
+                if (user != null) {
+                    form.setResolvedByUserName(user.getDisplayName());
+                }
+            } catch (Exception e) {
+                LogEvent.logWarn(this.getClass().getName(), "toForm",
+                        "Could not resolve user name for ID " + violation.getResolvedByUserId());
+            }
+        }
+
+        if (STATUS_ACKNOWLEDGED.equals(violation.getResolutionStatus())) {
+            form.setAcknowledgedDate(violation.getResolvedDateTime());
+        }
 
         return form;
     }

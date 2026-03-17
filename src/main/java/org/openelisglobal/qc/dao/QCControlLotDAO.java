@@ -24,4 +24,9 @@ public interface QCControlLotDAO extends BaseDAO<QCControlLot, String> {
      * Get control lot by lot number.
      */
     QCControlLot getByLotNumber(String lotNumber) throws LIMSRuntimeException;
+
+    /**
+     * Count active control lots for a specific instrument.
+     */
+    long countActiveByInstrument(Integer instrumentId) throws LIMSRuntimeException;
 }

@@ -1,8 +1,9 @@
 package org.openelisglobal.qc.dao;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import java.util.List;
-import org.hibernate.Session;
-import org.hibernate.query.Query;
 import org.openelisglobal.common.daoimpl.BaseDAOImpl;
 import org.openelisglobal.common.exception.LIMSRuntimeException;
 import org.openelisglobal.qc.valueholder.QCCorrectiveAction;
@@ -11,6 +12,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * DAO implementation for QCCorrectiveAction entity.
+ *
+ * Uses JPA Criteria API instead of HQL to avoid Hibernate 6 column name
+ * resolution issues where camelCase field names (e.g. createdDateTime) are
+ * lowercased to "createddatetime" instead of using
+ * {@code @Column(name = "created_date_time")}.
  */
 @Component
 @Transactional
@@ -23,12 +29,13 @@ public class QCCorrectiveActionDAOImpl extends BaseDAOImpl<QCCorrectiveAction, S
 
     @Override
     public List<QCCorrectiveAction> findByViolation(String violationId) throws LIMSRuntimeException {
-        String hql = "FROM QCCorrectiveAction WHERE violationId = :violationId ORDER BY createdDateTime DESC";
         try {
-            Session session = entityManager.unwrap(Session.class);
-            Query<QCCorrectiveAction> query = session.createQuery(hql, QCCorrectiveAction.class);
-            query.setParameter("violationId", violationId);
-            return query.list();
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<QCCorrectiveAction> cq = cb.createQuery(QCCorrectiveAction.class);
+            Root<QCCorrectiveAction> root = cq.from(QCCorrectiveAction.class);
+            cq.where(cb.equal(root.get("violationId"), violationId));
+            cq.orderBy(cb.desc(root.get("createdDateTime")));
+            return entityManager.createQuery(cq).getResultList();
         } catch (RuntimeException e) {
             throw new LIMSRuntimeException("Error retrieving corrective actions by violation", e);
         }
@@ -36,12 +43,13 @@ public class QCCorrectiveActionDAOImpl extends BaseDAOImpl<QCCorrectiveAction, S
 
     @Override
     public List<QCCorrectiveAction> findByAssignedUser(Integer userId) throws LIMSRuntimeException {
-        String hql = "FROM QCCorrectiveAction WHERE assignedUserId = :userId ORDER BY createdDateTime DESC";
         try {
-            Session session = entityManager.unwrap(Session.class);
-            Query<QCCorrectiveAction> query = session.createQuery(hql, QCCorrectiveAction.class);
-            query.setParameter("userId", userId);
-            return query.list();
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<QCCorrectiveAction> cq = cb.createQuery(QCCorrectiveAction.class);
+            Root<QCCorrectiveAction> root = cq.from(QCCorrectiveAction.class);
+            cq.where(cb.equal(root.get("assignedUserId"), userId));
+            cq.orderBy(cb.desc(root.get("createdDateTime")));
+            return entityManager.createQuery(cq).getResultList();
         } catch (RuntimeException e) {
             throw new LIMSRuntimeException("Error retrieving corrective actions by assigned user", e);
         }
@@ -49,12 +57,13 @@ public class QCCorrectiveActionDAOImpl extends BaseDAOImpl<QCCorrectiveAction, S
 
     @Override
     public List<QCCorrectiveAction> findByStatus(String status) throws LIMSRuntimeException {
-        String hql = "FROM QCCorrectiveAction WHERE status = :status ORDER BY createdDateTime DESC";
         try {
-            Session session = entityManager.unwrap(Session.class);
-            Query<QCCorrectiveAction> query = session.createQuery(hql, QCCorrectiveAction.class);
-            query.setParameter("status", status);
-            return query.list();
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<QCCorrectiveAction> cq = cb.createQuery(QCCorrectiveAction.class);
+            Root<QCCorrectiveAction> root = cq.from(QCCorrectiveAction.class);
+            cq.where(cb.equal(root.get("status"), status));
+            cq.orderBy(cb.desc(root.get("createdDateTime")));
+            return entityManager.createQuery(cq).getResultList();
         } catch (RuntimeException e) {
             throw new LIMSRuntimeException("Error retrieving corrective actions by status", e);
         }
@@ -62,12 +71,13 @@ public class QCCorrectiveActionDAOImpl extends BaseDAOImpl<QCCorrectiveAction, S
 
     @Override
     public List<QCCorrectiveAction> findPendingByAssignedUser(Integer userId) throws LIMSRuntimeException {
-        String hql = "FROM QCCorrectiveAction WHERE assignedUserId = :userId AND status = 'PENDING' ORDER BY createdDateTime DESC";
         try {
-            Session session = entityManager.unwrap(Session.class);
-            Query<QCCorrectiveAction> query = session.createQuery(hql, QCCorrectiveAction.class);
-            query.setParameter("userId", userId);
-            return query.list();
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<QCCorrectiveAction> cq = cb.createQuery(QCCorrectiveAction.class);
+            Root<QCCorrectiveAction> root = cq.from(QCCorrectiveAction.class);
+            cq.where(cb.equal(root.get("assignedUserId"), userId), cb.equal(root.get("status"), "PENDING"));
+            cq.orderBy(cb.desc(root.get("createdDateTime")));
+            return entityManager.createQuery(cq).getResultList();
         } catch (RuntimeException e) {
             throw new LIMSRuntimeException("Error retrieving pending corrective actions by assigned user", e);
         }

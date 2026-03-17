@@ -14,12 +14,27 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * Integration tests for AnalyzerQueryService query workflow
- * 
- * 
+ *
+ * <p>
+ * TODO: These tests have significant false-positive risk and need rewriting:
+ * <ul>
+ * <li>Analyzer IDs (999901–999903) are never inserted into the test DB, so
+ * every test only exercises the "analyzer not found" failure path</li>
+ * <li>Assertions accept every possible terminal state
+ * (completed/failed/cancelled), making it impossible for the tests to fail
+ * regardless of actual behavior</li>
+ * <li>testParseASTMResponse_ExtractsFields silently passes when the query
+ * fails, never actually verifying ASTM parsing</li>
+ * </ul>
+ * To fix: insert real analyzer fixtures, mock or stub the TCP layer, and assert
+ * specific expected outcomes instead of accepting any terminal state.
+ *
+ * <p>
  * These tests verify: - Query analyzer workflow with full Spring context -
  * Timeout handling for long-running queries - ASTM response parsing and field
  * extraction
- * 
+ *
+ * <p>
  * Uses BaseWebContextSensitiveTest for full Spring context and database
  * integration.
  */

@@ -43,4 +43,16 @@ public interface QCResultDAO extends BaseDAO<QCResult, String> {
      */
     List<QCResult> findByControlLotAndDateRange(String controlLotId, Timestamp startDate, Timestamp endDate)
             throws LIMSRuntimeException;
+
+    /**
+     * Get latest N results for a specific instrument and test, ordered by run date
+     * descending.
+     */
+    List<QCResult> findLatestByInstrumentAndTest(Integer instrumentId, Integer testId, int limit)
+            throws LIMSRuntimeException;
+
+    /**
+     * Get all distinct instrument IDs that have QC results.
+     */
+    List<Integer> findDistinctInstrumentIds() throws LIMSRuntimeException;
 }

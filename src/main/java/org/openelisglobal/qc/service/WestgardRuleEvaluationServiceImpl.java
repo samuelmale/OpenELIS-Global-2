@@ -141,6 +141,7 @@ public class WestgardRuleEvaluationServiceImpl implements WestgardRuleEvaluation
         List<QCResult> allResults = resultDAO.findByControlLotIdOrderByRunDateTime(controlLotId);
 
         return allResults.stream().filter(r -> !r.getId().equals(excludeResultId))
-                .sorted(Comparator.comparing(QCResult::getRunDateTime)).limit(limit).collect(Collectors.toList());
+                .sorted(Comparator.comparing(QCResult::getRunDateTime).reversed()).limit(limit)
+                .sorted(Comparator.comparing(QCResult::getRunDateTime)).collect(Collectors.toList());
     }
 }

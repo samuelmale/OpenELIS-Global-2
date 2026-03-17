@@ -79,7 +79,7 @@ public class QCRuleViolationServiceTest {
     public void testCreateViolation_ShouldTriggerAlert() {
         violationService.createViolation(testEvalResult, testQCResult);
 
-        verify(alertService).createAlertForViolation(any(QCRuleViolation.class));
+        verify(alertService).createAlertsForViolation(any(QCRuleViolation.class));
     }
 
     @Test
@@ -110,7 +110,7 @@ public class QCRuleViolationServiceTest {
 
     @Test
     public void testCreateViolation_AlertFailure_ShouldStillCreateViolation() {
-        doThrow(new RuntimeException("Alert error")).when(alertService).createAlertForViolation(any());
+        doThrow(new RuntimeException("Alert error")).when(alertService).createAlertsForViolation(any());
 
         QCRuleViolation violation = violationService.createViolation(testEvalResult, testQCResult);
 

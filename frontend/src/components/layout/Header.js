@@ -274,7 +274,7 @@ function OEHeader({
     // Add cache-busting parameter to prevent stale logo display after upload
     const logoSrc = headerLogoUrl
       ? `${config.serverBaseUrl}${headerLogoUrl}?v=${logoVersion}`
-      : `../images/openelis_logo.png`;
+      : `/images/openelis_logo.png`;
 
     return (
       <>
@@ -286,7 +286,9 @@ function OEHeader({
             style={{ objectFit: "contain", maxHeight: "71px" }}
             onError={(e) => {
               // Fallback to default logo if custom logo fails to load
-              e.target.src = `../images/openelis_logo.png`;
+              // Clear onError to prevent infinite loop if fallback also fails
+              e.target.onerror = null;
+              e.target.src = `/images/openelis_logo.png`;
             }}
           />
         </picture>

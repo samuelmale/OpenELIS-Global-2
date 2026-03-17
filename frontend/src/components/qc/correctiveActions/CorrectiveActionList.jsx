@@ -59,20 +59,60 @@ const CorrectiveActionList = () => {
 
   // Status options
   const statusOptions = [
-    { id: "", label: intl.formatMessage({ id: "qc.correctiveActions.filter.allStatuses" }) },
-    { id: "PENDING", label: intl.formatMessage({ id: "qc.correctiveAction.status.pending" }) },
-    { id: "IN_PROGRESS", label: intl.formatMessage({ id: "qc.correctiveAction.status.inProgress" }) },
-    { id: "COMPLETED", label: intl.formatMessage({ id: "qc.correctiveAction.status.completed" }) },
+    {
+      id: "",
+      label: intl.formatMessage({
+        id: "qc.correctiveActions.filter.allStatuses",
+      }),
+    },
+    {
+      id: "PENDING",
+      label: intl.formatMessage({ id: "qc.correctiveAction.status.pending" }),
+    },
+    {
+      id: "IN_PROGRESS",
+      label: intl.formatMessage({
+        id: "qc.correctiveAction.status.inProgress",
+      }),
+    },
+    {
+      id: "COMPLETED",
+      label: intl.formatMessage({ id: "qc.correctiveAction.status.completed" }),
+    },
   ];
 
   // Action type options
   const actionTypeOptions = [
-    { id: "", label: intl.formatMessage({ id: "qc.correctiveActions.filter.allTypes" }) },
-    { id: "RECALIBRATION", label: intl.formatMessage({ id: "qc.correctiveAction.type.recalibration" }) },
-    { id: "MAINTENANCE", label: intl.formatMessage({ id: "qc.correctiveAction.type.maintenance" }) },
-    { id: "REPEAT_CONTROL", label: intl.formatMessage({ id: "qc.correctiveAction.type.repeatControl" }) },
-    { id: "REAGENT_CHANGE", label: intl.formatMessage({ id: "qc.correctiveAction.type.reagentChange" }) },
-    { id: "OTHER", label: intl.formatMessage({ id: "qc.correctiveAction.type.other" }) },
+    {
+      id: "",
+      label: intl.formatMessage({ id: "qc.correctiveActions.filter.allTypes" }),
+    },
+    {
+      id: "RECALIBRATION",
+      label: intl.formatMessage({
+        id: "qc.correctiveAction.type.recalibration",
+      }),
+    },
+    {
+      id: "MAINTENANCE",
+      label: intl.formatMessage({ id: "qc.correctiveAction.type.maintenance" }),
+    },
+    {
+      id: "REPEAT_CONTROL",
+      label: intl.formatMessage({
+        id: "qc.correctiveAction.type.repeatControl",
+      }),
+    },
+    {
+      id: "REAGENT_CHANGE",
+      label: intl.formatMessage({
+        id: "qc.correctiveAction.type.reagentChange",
+      }),
+    },
+    {
+      id: "OTHER",
+      label: intl.formatMessage({ id: "qc.correctiveAction.type.other" }),
+    },
   ];
 
   // Load corrective actions
@@ -93,7 +133,9 @@ const CorrectiveActionList = () => {
       } else if (Array.isArray(response)) {
         setActions(response);
       } else {
-        setError(intl.formatMessage({ id: "qc.correctiveActions.error.loadFailed" }));
+        setError(
+          intl.formatMessage({ id: "qc.correctiveActions.error.loadFailed" }),
+        );
       }
       setLoading(false);
     });
@@ -151,22 +193,34 @@ const CorrectiveActionList = () => {
         if (response.ok) {
           loadActions();
         } else {
-          setError(intl.formatMessage({ id: "qc.correctiveActions.error.completeFailed" }));
+          setError(
+            intl.formatMessage({
+              id: "qc.correctiveActions.error.completeFailed",
+            }),
+          );
         }
-      }
+      },
     );
   };
 
   // Handle start progress
   const handleStartProgress = (actionId) => {
     const endpoint = `/rest/qc/corrective-actions/${actionId}/start`;
-    postToOpenElisServerFullResponse(endpoint, JSON.stringify({}), (response) => {
-      if (response.ok) {
-        loadActions();
-      } else {
-        setError(intl.formatMessage({ id: "qc.correctiveActions.error.startFailed" }));
-      }
-    });
+    postToOpenElisServerFullResponse(
+      endpoint,
+      JSON.stringify({}),
+      (response) => {
+        if (response.ok) {
+          loadActions();
+        } else {
+          setError(
+            intl.formatMessage({
+              id: "qc.correctiveActions.error.startFailed",
+            }),
+          );
+        }
+      },
+    );
   };
 
   // Navigate to create new action
@@ -200,12 +254,36 @@ const CorrectiveActionList = () => {
 
   // Table headers
   const headers = [
-    { key: "createdDate", header: intl.formatMessage({ id: "qc.correctiveActions.table.created" }) },
-    { key: "actionType", header: intl.formatMessage({ id: "qc.correctiveActions.table.actionType" }) },
-    { key: "analyzer", header: intl.formatMessage({ id: "qc.correctiveActions.table.analyzer" }) },
-    { key: "violation", header: intl.formatMessage({ id: "qc.correctiveActions.table.violation" }) },
-    { key: "assignedTo", header: intl.formatMessage({ id: "qc.correctiveActions.table.assignedTo" }) },
-    { key: "status", header: intl.formatMessage({ id: "qc.correctiveActions.table.status" }) },
+    {
+      key: "createdDate",
+      header: intl.formatMessage({ id: "qc.correctiveActions.table.created" }),
+    },
+    {
+      key: "actionType",
+      header: intl.formatMessage({
+        id: "qc.correctiveActions.table.actionType",
+      }),
+    },
+    {
+      key: "analyzer",
+      header: intl.formatMessage({ id: "qc.correctiveActions.table.analyzer" }),
+    },
+    {
+      key: "violation",
+      header: intl.formatMessage({
+        id: "qc.correctiveActions.table.violation",
+      }),
+    },
+    {
+      key: "assignedTo",
+      header: intl.formatMessage({
+        id: "qc.correctiveActions.table.assignedTo",
+      }),
+    },
+    {
+      key: "status",
+      header: intl.formatMessage({ id: "qc.correctiveActions.table.status" }),
+    },
     { key: "actions", header: "" },
   ];
 
@@ -213,19 +291,27 @@ const CorrectiveActionList = () => {
   const rows = actions.map((action) => ({
     id: action.id,
     createdDate: formatTimestamp(action.createdDate),
-    actionType: intl.formatMessage({ id: `qc.correctiveAction.type.${action.actionType?.toLowerCase()}` }),
+    actionType: intl.formatMessage({
+      id: `qc.correctiveAction.type.${action.actionType?.toLowerCase()}`,
+    }),
     analyzer: action.analyzerName || action.violation?.analyzerName || "-",
     violation: action.violationRuleCode || action.violation?.ruleCode || "-",
-    assignedTo: action.assignedUserName || action.assignedUser?.displayName || "-",
+    assignedTo:
+      action.assignedUserName || action.assignedUser?.displayName || "-",
     status: action.status,
     _action: action,
   }));
 
   if (loading && actions.length === 0) {
     return (
-      <div className="corrective-action-list-loading" data-testid="corrective-action-list-loading">
+      <div
+        className="corrective-action-list-loading"
+        data-testid="corrective-action-list-loading"
+      >
         <Loading
-          description={intl.formatMessage({ id: "qc.correctiveActions.loading" })}
+          description={intl.formatMessage({
+            id: "qc.correctiveActions.loading",
+          })}
           withOverlay={false}
         />
       </div>
@@ -233,25 +319,35 @@ const CorrectiveActionList = () => {
   }
 
   return (
-    <div className="corrective-action-list" data-testid="corrective-action-list">
+    <div
+      className="corrective-action-list"
+      data-testid="corrective-action-list"
+    >
       {/* Header */}
-      <div className="corrective-action-list-header" data-testid="corrective-action-list-header">
+      <div
+        className="corrective-action-list-header"
+        data-testid="corrective-action-list-header"
+      >
         <div className="corrective-action-list-header-title">
           <PageTitle
             breadcrumbs={[
               {
-                label: intl.formatMessage({ id: "analyzer.page.hierarchy.root" }),
+                label: intl.formatMessage({
+                  id: "analyzer.page.hierarchy.root",
+                }),
                 link: "/analyzers",
               },
               {
                 label: intl.formatMessage({ id: "qc.dashboard.title" }),
-                link: "/analyzers/qc",
+                link: "/analyzers/qc/db",
               },
               {
                 label: intl.formatMessage({ id: "qc.correctiveActions.title" }),
               },
             ]}
-            subtitle={intl.formatMessage({ id: "qc.correctiveActions.subtitle" })}
+            subtitle={intl.formatMessage({
+              id: "qc.correctiveActions.subtitle",
+            })}
           />
         </div>
         <Button
@@ -276,11 +372,18 @@ const CorrectiveActionList = () => {
       )}
 
       {/* Filters */}
-      <Grid className="corrective-action-list-filters" data-testid="corrective-action-list-filters">
+      <Grid
+        className="corrective-action-list-filters"
+        data-testid="corrective-action-list-filters"
+      >
         <Column lg={4} md={4} sm={4}>
           <Search
-            placeholder={intl.formatMessage({ id: "qc.correctiveActions.filter.search" })}
-            labelText={intl.formatMessage({ id: "qc.correctiveActions.filter.search" })}
+            placeholder={intl.formatMessage({
+              id: "qc.correctiveActions.filter.search",
+            })}
+            labelText={intl.formatMessage({
+              id: "qc.correctiveActions.filter.search",
+            })}
             value={searchTerm}
             onChange={(e) => handleSearch(e.target.value)}
             data-testid="corrective-action-search-input"
@@ -289,22 +392,32 @@ const CorrectiveActionList = () => {
         <Column lg={3} md={2} sm={4}>
           <Dropdown
             id="status-filter"
-            titleText={intl.formatMessage({ id: "qc.correctiveActions.filter.status" })}
+            titleText={intl.formatMessage({
+              id: "qc.correctiveActions.filter.status",
+            })}
             items={statusOptions}
             itemToString={(item) => item?.label || ""}
             selectedItem={statusOptions.find((o) => o.id === filters.status)}
-            onChange={({ selectedItem }) => handleFilterChange("status", selectedItem?.id || "")}
+            onChange={({ selectedItem }) =>
+              handleFilterChange("status", selectedItem?.id || "")
+            }
             data-testid="corrective-action-status-filter"
           />
         </Column>
         <Column lg={3} md={2} sm={4}>
           <Dropdown
             id="action-type-filter"
-            titleText={intl.formatMessage({ id: "qc.correctiveActions.filter.actionType" })}
+            titleText={intl.formatMessage({
+              id: "qc.correctiveActions.filter.actionType",
+            })}
             items={actionTypeOptions}
             itemToString={(item) => item?.label || ""}
-            selectedItem={actionTypeOptions.find((o) => o.id === filters.actionType)}
-            onChange={({ selectedItem }) => handleFilterChange("actionType", selectedItem?.id || "")}
+            selectedItem={actionTypeOptions.find(
+              (o) => o.id === filters.actionType,
+            )}
+            onChange={({ selectedItem }) =>
+              handleFilterChange("actionType", selectedItem?.id || "")
+            }
             data-testid="corrective-action-type-filter"
           />
         </Column>
@@ -318,7 +431,10 @@ const CorrectiveActionList = () => {
               <TableHead>
                 <TableRow>
                   {headers.map((header) => (
-                    <TableHeader key={header.key} {...getHeaderProps({ header })}>
+                    <TableHeader
+                      key={header.key}
+                      {...getHeaderProps({ header })}
+                    >
                       {header.header}
                     </TableHeader>
                   ))}
@@ -326,36 +442,52 @@ const CorrectiveActionList = () => {
               </TableHead>
               <TableBody>
                 {rows.map((row) => {
-                  const action = row._action || actions.find((a) => a.id === row.id);
+                  const action =
+                    row._action || actions.find((a) => a.id === row.id);
                   const isPending = action?.status === "PENDING";
                   const isInProgress = action?.status === "IN_PROGRESS";
 
                   return (
-                    <TableRow key={row.id} {...getRowProps({ row })} data-testid={`corrective-action-row-${row.id}`}>
+                    <TableRow
+                      key={row.id}
+                      {...getRowProps({ row })}
+                      data-testid={`corrective-action-row-${row.id}`}
+                    >
                       {row.cells.map((cell) => {
                         let cellContent = cell.value;
 
                         if (cell.info.header === "status") {
                           cellContent = (
-                            <Tag type={getStatusTagType(cell.value)} data-testid={`corrective-action-status-${row.id}`}>
-                              {intl.formatMessage({ id: `qc.correctiveAction.status.${cell.value?.toLowerCase()}` })}
+                            <Tag
+                              type={getStatusTagType(cell.value)}
+                              data-testid={`corrective-action-status-${row.id}`}
+                            >
+                              {intl.formatMessage({
+                                id: `qc.correctiveAction.status.${cell.value?.toLowerCase()}`,
+                              })}
                             </Tag>
                           );
                         } else if (cell.info.header === "actions") {
                           cellContent = (
                             <OverflowMenu
-                              ariaLabel={intl.formatMessage({ id: "qc.correctiveActions.action.menu" })}
+                              ariaLabel={intl.formatMessage({
+                                id: "qc.correctiveActions.action.menu",
+                              })}
                               data-testid={`corrective-action-actions-${row.id}`}
                             >
                               {isPending && (
                                 <OverflowMenuItem
-                                  itemText={intl.formatMessage({ id: "qc.correctiveActions.action.start" })}
+                                  itemText={intl.formatMessage({
+                                    id: "qc.correctiveActions.action.start",
+                                  })}
                                   onClick={() => handleStartProgress(action.id)}
                                 />
                               )}
                               {isInProgress && (
                                 <OverflowMenuItem
-                                  itemText={intl.formatMessage({ id: "qc.correctiveActions.action.complete" })}
+                                  itemText={intl.formatMessage({
+                                    id: "qc.correctiveActions.action.complete",
+                                  })}
                                   onClick={() => handleMarkComplete(action.id)}
                                 />
                               )}
@@ -364,7 +496,10 @@ const CorrectiveActionList = () => {
                         }
 
                         return (
-                          <TableCell key={cell.id} data-testid={`corrective-action-${cell.info.header}-${row.id}`}>
+                          <TableCell
+                            key={cell.id}
+                            data-testid={`corrective-action-${cell.info.header}-${row.id}`}
+                          >
                             {cellContent}
                           </TableCell>
                         );

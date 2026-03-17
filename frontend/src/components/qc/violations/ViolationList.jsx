@@ -65,18 +65,44 @@ const ViolationList = () => {
 
   // Severity options
   const severityOptions = [
-    { id: "", label: intl.formatMessage({ id: "qc.violations.filter.allSeverities" }) },
-    { id: "REJECTION", label: intl.formatMessage({ id: "qc.violations.severity.rejection" }) },
-    { id: "WARNING", label: intl.formatMessage({ id: "qc.violations.severity.warning" }) },
+    {
+      id: "",
+      label: intl.formatMessage({ id: "qc.violations.filter.allSeverities" }),
+    },
+    {
+      id: "REJECTION",
+      label: intl.formatMessage({ id: "qc.violations.severity.rejection" }),
+    },
+    {
+      id: "WARNING",
+      label: intl.formatMessage({ id: "qc.violations.severity.warning" }),
+    },
   ];
 
   // Status options
   const statusOptions = [
-    { id: "", label: intl.formatMessage({ id: "qc.violations.filter.allStatuses" }) },
-    { id: "UNRESOLVED", label: intl.formatMessage({ id: "qc.violations.status.unresolved" }) },
-    { id: "ACKNOWLEDGED", label: intl.formatMessage({ id: "qc.violations.status.acknowledged" }) },
-    { id: "CORRECTIVE_ACTION_PENDING", label: intl.formatMessage({ id: "qc.violations.status.correctiveActionPending" }) },
-    { id: "RESOLVED", label: intl.formatMessage({ id: "qc.violations.status.resolved" }) },
+    {
+      id: "",
+      label: intl.formatMessage({ id: "qc.violations.filter.allStatuses" }),
+    },
+    {
+      id: "UNRESOLVED",
+      label: intl.formatMessage({ id: "qc.violations.status.unresolved" }),
+    },
+    {
+      id: "ACKNOWLEDGED",
+      label: intl.formatMessage({ id: "qc.violations.status.acknowledged" }),
+    },
+    {
+      id: "CORRECTIVE_ACTION_PENDING",
+      label: intl.formatMessage({
+        id: "qc.violations.status.correctiveActionPending",
+      }),
+    },
+    {
+      id: "RESOLVED",
+      label: intl.formatMessage({ id: "qc.violations.status.resolved" }),
+    },
   ];
 
   // Load violations
@@ -167,16 +193,22 @@ const ViolationList = () => {
   // Handle acknowledge violation (FR-036)
   const handleAcknowledge = (violationId) => {
     const endpoint = `/rest/qc/violations/${violationId}/acknowledge`;
-    postToOpenElisServerFullResponse(endpoint, JSON.stringify({}), (response) => {
-      if (response.ok) {
-        loadViolations();
-        if (selectedViolation?.id === violationId) {
-          setDetailModalOpen(false);
+    postToOpenElisServerFullResponse(
+      endpoint,
+      JSON.stringify({}),
+      (response) => {
+        if (response.ok) {
+          loadViolations();
+          if (selectedViolation?.id === violationId) {
+            setDetailModalOpen(false);
+          }
+        } else {
+          setError(
+            intl.formatMessage({ id: "qc.violations.error.acknowledgeFailed" }),
+          );
         }
-      } else {
-        setError(intl.formatMessage({ id: "qc.violations.error.acknowledgeFailed" }));
-      }
-    });
+      },
+    );
   };
 
   // Handle view details
@@ -187,7 +219,9 @@ const ViolationList = () => {
 
   // Handle create corrective action
   const handleCreateCorrectiveAction = (violationId) => {
-    history.push(`/analyzers/qc/corrective-actions/new?violationId=${violationId}`);
+    history.push(
+      `/analyzers/qc/corrective-actions/new?violationId=${violationId}`,
+    );
   };
 
   // Get severity tag type
@@ -223,18 +257,35 @@ const ViolationList = () => {
 
   // Table headers
   const headers = [
-    { key: "timestamp", header: intl.formatMessage({ id: "qc.violations.table.timestamp" }) },
-    { key: "analyzer", header: intl.formatMessage({ id: "qc.violations.table.analyzer" }) },
-    { key: "ruleCode", header: intl.formatMessage({ id: "qc.violations.table.rule" }) },
-    { key: "severity", header: intl.formatMessage({ id: "qc.violations.table.severity" }) },
-    { key: "status", header: intl.formatMessage({ id: "qc.violations.table.status" }) },
+    {
+      key: "timestamp",
+      header: intl.formatMessage({ id: "qc.violations.table.timestamp" }),
+    },
+    {
+      key: "analyzer",
+      header: intl.formatMessage({ id: "qc.violations.table.analyzer" }),
+    },
+    {
+      key: "ruleCode",
+      header: intl.formatMessage({ id: "qc.violations.table.rule" }),
+    },
+    {
+      key: "severity",
+      header: intl.formatMessage({ id: "qc.violations.table.severity" }),
+    },
+    {
+      key: "status",
+      header: intl.formatMessage({ id: "qc.violations.table.status" }),
+    },
     { key: "actions", header: "" },
   ];
 
   // Format rows
   const rows = violations.map((violation) => ({
     id: violation.id,
-    timestamp: formatTimestamp(violation.violationTimestamp || violation.createdDate),
+    timestamp: formatTimestamp(
+      violation.violationTimestamp || violation.createdDate,
+    ),
     analyzer: violation.analyzerName || violation.analyzer?.name || "-",
     ruleCode: violation.ruleCode || "-",
     severity: violation.severity,
@@ -244,7 +295,10 @@ const ViolationList = () => {
 
   if (loading && violations.length === 0) {
     return (
-      <div className="violation-list-loading" data-testid="violation-list-loading">
+      <div
+        className="violation-list-loading"
+        data-testid="violation-list-loading"
+      >
         <Loading
           description={intl.formatMessage({ id: "qc.violations.loading" })}
           withOverlay={false}
@@ -256,7 +310,10 @@ const ViolationList = () => {
   return (
     <div className="violation-list" data-testid="violation-list">
       {/* Header */}
-      <div className="violation-list-header" data-testid="violation-list-header">
+      <div
+        className="violation-list-header"
+        data-testid="violation-list-header"
+      >
         <PageTitle
           breadcrumbs={[
             {
@@ -265,7 +322,7 @@ const ViolationList = () => {
             },
             {
               label: intl.formatMessage({ id: "qc.dashboard.title" }),
-              link: "/analyzers/qc",
+              link: "/analyzers/qc/db",
             },
             {
               label: intl.formatMessage({ id: "qc.violations.title" }),
@@ -287,11 +344,18 @@ const ViolationList = () => {
       )}
 
       {/* Filters */}
-      <Grid className="violation-list-filters" data-testid="violation-list-filters">
+      <Grid
+        className="violation-list-filters"
+        data-testid="violation-list-filters"
+      >
         <Column lg={4} md={4} sm={4}>
           <Search
-            placeholder={intl.formatMessage({ id: "qc.violations.filter.search" })}
-            labelText={intl.formatMessage({ id: "qc.violations.filter.search" })}
+            placeholder={intl.formatMessage({
+              id: "qc.violations.filter.search",
+            })}
+            labelText={intl.formatMessage({
+              id: "qc.violations.filter.search",
+            })}
             value={searchTerm}
             onChange={(e) => handleSearch(e.target.value)}
             data-testid="violation-search-input"
@@ -300,36 +364,62 @@ const ViolationList = () => {
         <Column lg={3} md={2} sm={4}>
           <Dropdown
             id="severity-filter"
-            titleText={intl.formatMessage({ id: "qc.violations.filter.severity" })}
+            titleText={intl.formatMessage({
+              id: "qc.violations.filter.severity",
+            })}
             items={severityOptions}
             itemToString={(item) => item?.label || ""}
-            selectedItem={severityOptions.find((o) => o.id === filters.severity)}
-            onChange={({ selectedItem }) => handleFilterChange("severity", selectedItem?.id || "")}
+            selectedItem={severityOptions.find(
+              (o) => o.id === filters.severity,
+            )}
+            onChange={({ selectedItem }) =>
+              handleFilterChange("severity", selectedItem?.id || "")
+            }
             data-testid="violation-severity-filter"
           />
         </Column>
         <Column lg={3} md={2} sm={4}>
           <Dropdown
             id="status-filter"
-            titleText={intl.formatMessage({ id: "qc.violations.filter.status" })}
+            titleText={intl.formatMessage({
+              id: "qc.violations.filter.status",
+            })}
             items={statusOptions}
             itemToString={(item) => item?.label || ""}
             selectedItem={statusOptions.find((o) => o.id === filters.status)}
-            onChange={({ selectedItem }) => handleFilterChange("status", selectedItem?.id || "")}
+            onChange={({ selectedItem }) =>
+              handleFilterChange("status", selectedItem?.id || "")
+            }
             data-testid="violation-status-filter"
           />
         </Column>
         <Column lg={3} md={2} sm={4}>
           <Dropdown
             id="analyzer-filter"
-            titleText={intl.formatMessage({ id: "qc.violations.filter.analyzer" })}
+            titleText={intl.formatMessage({
+              id: "qc.violations.filter.analyzer",
+            })}
             items={[
-              { id: "", name: intl.formatMessage({ id: "qc.violations.filter.allAnalyzers" }) },
+              {
+                id: "",
+                name: intl.formatMessage({
+                  id: "qc.violations.filter.allAnalyzers",
+                }),
+              },
               ...analyzers,
             ]}
             itemToString={(item) => item?.name || ""}
-            selectedItem={analyzers.find((a) => a.id === filters.analyzer) || { id: "", name: intl.formatMessage({ id: "qc.violations.filter.allAnalyzers" }) }}
-            onChange={({ selectedItem }) => handleFilterChange("analyzer", selectedItem?.id || "")}
+            selectedItem={
+              analyzers.find((a) => a.id === filters.analyzer) || {
+                id: "",
+                name: intl.formatMessage({
+                  id: "qc.violations.filter.allAnalyzers",
+                }),
+              }
+            }
+            onChange={({ selectedItem }) =>
+              handleFilterChange("analyzer", selectedItem?.id || "")
+            }
             data-testid="violation-analyzer-filter"
           />
         </Column>
@@ -343,7 +433,10 @@ const ViolationList = () => {
               <TableHead>
                 <TableRow>
                   {headers.map((header) => (
-                    <TableHeader key={header.key} {...getHeaderProps({ header })}>
+                    <TableHeader
+                      key={header.key}
+                      {...getHeaderProps({ header })}
+                    >
                       {header.header}
                     </TableHeader>
                   ))}
@@ -351,47 +444,76 @@ const ViolationList = () => {
               </TableHead>
               <TableBody>
                 {rows.map((row) => {
-                  const violation = row._violation || violations.find((v) => v.id === row.id);
-                  const isUnresolved = violation?.resolutionStatus === "UNRESOLVED" || violation?.status === "UNRESOLVED";
+                  const violation =
+                    row._violation || violations.find((v) => v.id === row.id);
+                  const isUnresolved =
+                    violation?.resolutionStatus === "UNRESOLVED" ||
+                    violation?.status === "UNRESOLVED";
                   const isWarning = violation?.severity === "WARNING";
 
                   return (
-                    <TableRow key={row.id} {...getRowProps({ row })} data-testid={`violation-row-${row.id}`}>
+                    <TableRow
+                      key={row.id}
+                      {...getRowProps({ row })}
+                      data-testid={`violation-row-${row.id}`}
+                    >
                       {row.cells.map((cell) => {
                         let cellContent = cell.value;
 
                         if (cell.info.header === "severity") {
                           cellContent = (
-                            <Tag type={getSeverityTagType(cell.value)} data-testid={`violation-severity-${row.id}`}>
-                              {intl.formatMessage({ id: `qc.violations.severity.${cell.value?.toLowerCase()}` })}
+                            <Tag
+                              type={getSeverityTagType(cell.value)}
+                              data-testid={`violation-severity-${row.id}`}
+                            >
+                              {intl.formatMessage({
+                                id: `qc.violations.severity.${cell.value?.toLowerCase()}`,
+                              })}
                             </Tag>
                           );
                         } else if (cell.info.header === "status") {
                           cellContent = (
-                            <Tag type={getStatusTagType(cell.value)} data-testid={`violation-status-${row.id}`}>
-                              {intl.formatMessage({ id: `qc.violations.status.${cell.value?.toLowerCase()}` })}
+                            <Tag
+                              type={getStatusTagType(cell.value)}
+                              data-testid={`violation-status-${row.id}`}
+                            >
+                              {intl.formatMessage({
+                                id: `qc.violations.status.${cell.value?.toLowerCase()}`,
+                              })}
                             </Tag>
                           );
                         } else if (cell.info.header === "actions") {
                           cellContent = (
                             <OverflowMenu
-                              ariaLabel={intl.formatMessage({ id: "qc.violations.action.menu" })}
+                              ariaLabel={intl.formatMessage({
+                                id: "qc.violations.action.menu",
+                              })}
                               data-testid={`violation-actions-${row.id}`}
                             >
                               <OverflowMenuItem
-                                itemText={intl.formatMessage({ id: "qc.violations.action.viewDetails" })}
+                                itemText={intl.formatMessage({
+                                  id: "qc.violations.action.viewDetails",
+                                })}
                                 onClick={() => handleViewDetails(violation)}
                               />
                               {isUnresolved && isWarning && (
                                 <OverflowMenuItem
-                                  itemText={intl.formatMessage({ id: "qc.violations.action.acknowledge" })}
-                                  onClick={() => handleAcknowledge(violation.id)}
+                                  itemText={intl.formatMessage({
+                                    id: "qc.violations.action.acknowledge",
+                                  })}
+                                  onClick={() =>
+                                    handleAcknowledge(violation.id)
+                                  }
                                 />
                               )}
                               {isUnresolved && !isWarning && (
                                 <OverflowMenuItem
-                                  itemText={intl.formatMessage({ id: "qc.violations.action.createCorrectiveAction" })}
-                                  onClick={() => handleCreateCorrectiveAction(violation.id)}
+                                  itemText={intl.formatMessage({
+                                    id: "qc.violations.action.createCorrectiveAction",
+                                  })}
+                                  onClick={() =>
+                                    handleCreateCorrectiveAction(violation.id)
+                                  }
                                 />
                               )}
                             </OverflowMenu>
@@ -399,7 +521,10 @@ const ViolationList = () => {
                         }
 
                         return (
-                          <TableCell key={cell.id} data-testid={`violation-${cell.info.header}-${row.id}`}>
+                          <TableCell
+                            key={cell.id}
+                            data-testid={`violation-${cell.info.header}-${row.id}`}
+                          >
                             {cellContent}
                           </TableCell>
                         );

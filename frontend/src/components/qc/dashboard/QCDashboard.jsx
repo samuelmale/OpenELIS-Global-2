@@ -1,87 +1,110 @@
 /**
  * QCDashboard Component
  *
- * Main dashboard showing compliance status for all analyzers
- * Task Reference: T123
- * Specification: FR-046 to FR-051, User Story 1
+ * Main dashboard with summary tiles and tabbed layout:
+ * - Summary tiles (In Control, Warning, Out of Control, Pass Rate)
+ * - Instruments tab (DataTable with search + pagination)
+ * - Alerts tab (active violations + acknowledged table)
  *
- * Features:
- * - Compliance status tiles for each analyzer (green/yellow/red)
- * - Alert feed in top-right corner
- * - Auto-refresh at configurable intervals (default: 5 minutes)
- * - Last update timestamp display
+ * Auto-refreshes every 5 minutes.
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
-  Grid,
-  Column,
   Loading,
   InlineNotification,
   Button,
+  Tabs,
+  TabList,
+  Tab,
+  TabPanels,
+  TabPanel,
 } from "@carbon/react";
 import { Renew } from "@carbon/icons-react";
 import { useIntl } from "react-intl";
-import { useHistory } from "react-router-dom";
 import { getFromOpenElisServer } from "../../utils/Utils";
-import ComplianceStatusTile from "./ComplianceStatusTile";
-import AlertFeed from "../alerts/AlertFeed";
+import QCSummaryTiles from "./QCSummaryTiles";
+import InstrumentsTab from "./InstrumentsTab";
+import AlertsTab from "./AlertsTab";
 import PageTitle from "../../common/PageTitle/PageTitle";
 import "./QCDashboard.css";
 
+const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+
 const QCDashboard = () => {
   const intl = useIntl();
-  const history = useHistory();
+  const intlRef = useRef(intl);
+  intlRef.current = intl;
 
-  // State
-  const [analyzers, setAnalyzers] = useState([]);
+  const [summary, setSummary] = useState(null);
+  const [instruments, setInstruments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [refreshInterval] = useState(5 * 60 * 1000); // 5 minutes (FR-050)
 
-  // Load dashboard data
   const loadDashboardData = useCallback(() => {
     setLoading(true);
     setError(null);
 
-    getFromOpenElisServer("/rest/qc/dashboard", (response) => {
-      if (response && response.data) {
-        setAnalyzers(response.data.analyzers || []);
-        setLastUpdated(new Date());
-      } else if (Array.isArray(response)) {
-        setAnalyzers(response);
-        setLastUpdated(new Date());
+    let completed = 0;
+    const total = 2;
+    let hasError = false;
+
+    const checkDone = () => {
+      completed++;
+      if (completed >= total) {
+        setLoading(false);
+        if (!hasError) {
+          setLastUpdated(new Date());
+        }
+      }
+    };
+
+    // Load summary data
+    getFromOpenElisServer("/rest/qc/dashboard/summary", (response) => {
+      if (response && (response.data || response.totalInstruments != null)) {
+        setSummary(response.data || response);
+      } else if (response && typeof response === "object") {
+        setSummary(response);
       } else {
+        hasError = true;
         setError(
-          intl.formatMessage({ id: "qc.dashboard.error.loadFailed" }),
+          intlRef.current.formatMessage({
+            id: "qc.dashboard.error.loadFailed",
+          }),
         );
       }
-      setLoading(false);
+      checkDone();
     });
-  }, [intl]);
 
-  // Initial load and auto-refresh
+    // Load instruments data
+    getFromOpenElisServer("/rest/qc/dashboard/instruments", (response) => {
+      if (response && response.data) {
+        setInstruments(response.data || []);
+      } else if (Array.isArray(response)) {
+        setInstruments(response);
+      } else {
+        hasError = true;
+        setError(
+          intlRef.current.formatMessage({
+            id: "qc.dashboard.error.loadFailed",
+          }),
+        );
+      }
+      checkDone();
+    });
+  }, []);
+
   useEffect(() => {
     loadDashboardData();
-
-    // Set up auto-refresh (FR-050)
-    const intervalId = setInterval(loadDashboardData, refreshInterval);
-
+    const intervalId = setInterval(loadDashboardData, REFRESH_INTERVAL);
     return () => clearInterval(intervalId);
-  }, [loadDashboardData, refreshInterval]);
+  }, [loadDashboardData]);
 
-  // Handle analyzer click - navigate to control chart detail
-  const handleAnalyzerClick = (analyzerId) => {
-    history.push(`/analyzers/qc/charts/${analyzerId}`);
-  };
-
-  // Handle manual refresh
   const handleRefresh = () => {
     loadDashboardData();
   };
 
-  // Format last updated timestamp
   const formatLastUpdated = () => {
     if (!lastUpdated) return "";
     return intl.formatDate(lastUpdated, {
@@ -91,7 +114,7 @@ const QCDashboard = () => {
     });
   };
 
-  if (loading && analyzers.length === 0) {
+  if (loading && !summary && instruments.length === 0) {
     return (
       <div className="qc-dashboard-loading" data-testid="qc-dashboard-loading">
         <Loading
@@ -110,7 +133,9 @@ const QCDashboard = () => {
           <PageTitle
             breadcrumbs={[
               {
-                label: intl.formatMessage({ id: "analyzer.page.hierarchy.root" }),
+                label: intl.formatMessage({
+                  id: "analyzer.page.hierarchy.root",
+                }),
                 link: "/analyzers",
               },
               {
@@ -121,14 +146,20 @@ const QCDashboard = () => {
           />
         </div>
         <div className="qc-dashboard-header-actions">
-          <span className="qc-dashboard-last-updated" data-testid="qc-dashboard-last-updated">
-            {intl.formatMessage({ id: "qc.dashboard.lastUpdated" })}: {formatLastUpdated()}
+          <span
+            className="qc-dashboard-last-updated"
+            data-testid="qc-dashboard-last-updated"
+          >
+            {intl.formatMessage({ id: "qc.dashboard.lastUpdated" })}:{" "}
+            {formatLastUpdated()}
           </span>
           <Button
             kind="ghost"
             size="sm"
             renderIcon={Renew}
-            iconDescription={intl.formatMessage({ id: "qc.dashboard.refresh" })}
+            iconDescription={intl.formatMessage({
+              id: "qc.dashboard.refresh",
+            })}
             onClick={handleRefresh}
             data-testid="qc-dashboard-refresh-button"
           >
@@ -148,48 +179,28 @@ const QCDashboard = () => {
         />
       )}
 
-      {/* Main content area with Alert Feed */}
-      <Grid className="qc-dashboard-content">
-        {/* Analyzer compliance tiles */}
-        <Column lg={12} md={6} sm={4}>
-          <div className="qc-dashboard-analyzers" data-testid="qc-dashboard-analyzers">
-            <h3 className="qc-dashboard-section-title">
-              {intl.formatMessage({ id: "qc.dashboard.analyzers.title" })}
-            </h3>
-            {analyzers.length === 0 ? (
-              <div className="qc-dashboard-empty" data-testid="qc-dashboard-empty">
-                {intl.formatMessage({ id: "qc.dashboard.noAnalyzers" })}
-              </div>
-            ) : (
-              <Grid className="qc-dashboard-tiles">
-                {analyzers.map((analyzer) => (
-                  <Column key={analyzer.id} lg={4} md={4} sm={4}>
-                    <ComplianceStatusTile
-                      analyzerId={analyzer.id}
-                      analyzerName={analyzer.name}
-                      status={analyzer.complianceStatus}
-                      triggeredRules={analyzer.triggeredRules || []}
-                      lastResultTime={analyzer.lastResultTime}
-                      unresolvedViolationCount={analyzer.unresolvedViolationCount || 0}
-                      onClick={() => handleAnalyzerClick(analyzer.id)}
-                    />
-                  </Column>
-                ))}
-              </Grid>
-            )}
-          </div>
-        </Column>
+      {/* Summary Tiles */}
+      <QCSummaryTiles summary={summary || {}} loading={loading} />
 
-        {/* Alert Feed sidebar */}
-        <Column lg={4} md={2} sm={4}>
-          <div className="qc-dashboard-alerts" data-testid="qc-dashboard-alerts">
-            <h3 className="qc-dashboard-section-title">
-              {intl.formatMessage({ id: "qc.dashboard.alerts.title" })}
-            </h3>
-            <AlertFeed maxItems={10} />
-          </div>
-        </Column>
-      </Grid>
+      {/* Tabbed Content */}
+      <Tabs>
+        <TabList contained aria-label="QC Dashboard tabs">
+          <Tab data-testid="qc-tab-instruments">
+            {intl.formatMessage({ id: "qc.dashboard.tab.instruments" })}
+          </Tab>
+          <Tab data-testid="qc-tab-alerts">
+            {intl.formatMessage({ id: "qc.dashboard.tab.alerts" })}
+          </Tab>
+        </TabList>
+        <TabPanels>
+          <TabPanel>
+            <InstrumentsTab instruments={instruments} loading={loading} />
+          </TabPanel>
+          <TabPanel>
+            <AlertsTab />
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
     </div>
   );
 };

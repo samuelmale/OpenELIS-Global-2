@@ -32,6 +32,13 @@ public interface QCRuleViolationService {
     QCRuleViolation getById(String id);
 
     /**
+     * Get all violations regardless of status.
+     *
+     * @return List of all violations ordered by date descending
+     */
+    List<QCRuleViolation> findAll();
+
+    /**
      * Get all violations for a specific instrument.
      *
      * @param instrumentId The instrument ID

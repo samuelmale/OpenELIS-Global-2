@@ -1,9 +1,10 @@
 package org.openelisglobal.qc.dao;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import java.sql.Timestamp;
 import java.util.List;
-import org.hibernate.Session;
-import org.hibernate.query.Query;
 import org.openelisglobal.common.daoimpl.BaseDAOImpl;
 import org.openelisglobal.common.exception.LIMSRuntimeException;
 import org.openelisglobal.qc.valueholder.QCRuleViolation;
@@ -23,12 +24,13 @@ public class QCRuleViolationDAOImpl extends BaseDAOImpl<QCRuleViolation, String>
 
     @Override
     public List<QCRuleViolation> findByInstrument(Integer instrumentId) throws LIMSRuntimeException {
-        String hql = "FROM QCRuleViolation WHERE instrumentId = :instrumentId ORDER BY violationDateTime DESC";
         try {
-            Session session = entityManager.unwrap(Session.class);
-            Query<QCRuleViolation> query = session.createQuery(hql, QCRuleViolation.class);
-            query.setParameter("instrumentId", instrumentId);
-            return query.list();
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<QCRuleViolation> cq = cb.createQuery(QCRuleViolation.class);
+            Root<QCRuleViolation> root = cq.from(QCRuleViolation.class);
+            cq.where(cb.equal(root.get("instrumentId"), instrumentId));
+            cq.orderBy(cb.desc(root.get("violationDateTime")));
+            return entityManager.createQuery(cq).getResultList();
         } catch (RuntimeException e) {
             throw new LIMSRuntimeException("Error retrieving QC violations by instrument", e);
         }
@@ -36,11 +38,13 @@ public class QCRuleViolationDAOImpl extends BaseDAOImpl<QCRuleViolation, String>
 
     @Override
     public List<QCRuleViolation> findUnresolved() throws LIMSRuntimeException {
-        String hql = "FROM QCRuleViolation WHERE resolutionStatus = 'UNRESOLVED' ORDER BY violationDateTime DESC";
         try {
-            Session session = entityManager.unwrap(Session.class);
-            Query<QCRuleViolation> query = session.createQuery(hql, QCRuleViolation.class);
-            return query.list();
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<QCRuleViolation> cq = cb.createQuery(QCRuleViolation.class);
+            Root<QCRuleViolation> root = cq.from(QCRuleViolation.class);
+            cq.where(cb.equal(root.get("resolutionStatus"), "UNRESOLVED"));
+            cq.orderBy(cb.desc(root.get("violationDateTime")));
+            return entityManager.createQuery(cq).getResultList();
         } catch (RuntimeException e) {
             throw new LIMSRuntimeException("Error retrieving unresolved QC violations", e);
         }
@@ -48,12 +52,13 @@ public class QCRuleViolationDAOImpl extends BaseDAOImpl<QCRuleViolation, String>
 
     @Override
     public List<QCRuleViolation> findBySeverity(String severity) throws LIMSRuntimeException {
-        String hql = "FROM QCRuleViolation WHERE severity = :severity ORDER BY violationDateTime DESC";
         try {
-            Session session = entityManager.unwrap(Session.class);
-            Query<QCRuleViolation> query = session.createQuery(hql, QCRuleViolation.class);
-            query.setParameter("severity", severity);
-            return query.list();
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<QCRuleViolation> cq = cb.createQuery(QCRuleViolation.class);
+            Root<QCRuleViolation> root = cq.from(QCRuleViolation.class);
+            cq.where(cb.equal(root.get("severity"), severity));
+            cq.orderBy(cb.desc(root.get("violationDateTime")));
+            return entityManager.createQuery(cq).getResultList();
         } catch (RuntimeException e) {
             throw new LIMSRuntimeException("Error retrieving QC violations by severity", e);
         }
@@ -62,14 +67,15 @@ public class QCRuleViolationDAOImpl extends BaseDAOImpl<QCRuleViolation, String>
     @Override
     public List<QCRuleViolation> findByInstrumentAndDateRange(Integer instrumentId, Timestamp startDate,
             Timestamp endDate) throws LIMSRuntimeException {
-        String hql = "FROM QCRuleViolation WHERE instrumentId = :instrumentId AND violationDateTime >= :startDate AND violationDateTime <= :endDate ORDER BY violationDateTime DESC";
         try {
-            Session session = entityManager.unwrap(Session.class);
-            Query<QCRuleViolation> query = session.createQuery(hql, QCRuleViolation.class);
-            query.setParameter("instrumentId", instrumentId);
-            query.setParameter("startDate", startDate);
-            query.setParameter("endDate", endDate);
-            return query.list();
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<QCRuleViolation> cq = cb.createQuery(QCRuleViolation.class);
+            Root<QCRuleViolation> root = cq.from(QCRuleViolation.class);
+            cq.where(cb.equal(root.get("instrumentId"), instrumentId),
+                    cb.greaterThanOrEqualTo(root.get("violationDateTime"), startDate),
+                    cb.lessThanOrEqualTo(root.get("violationDateTime"), endDate));
+            cq.orderBy(cb.desc(root.get("violationDateTime")));
+            return entityManager.createQuery(cq).getResultList();
         } catch (RuntimeException e) {
             throw new LIMSRuntimeException("Error retrieving QC violations by instrument and date range", e);
         }
@@ -77,12 +83,14 @@ public class QCRuleViolationDAOImpl extends BaseDAOImpl<QCRuleViolation, String>
 
     @Override
     public List<QCRuleViolation> findUnresolvedByInstrument(Integer instrumentId) throws LIMSRuntimeException {
-        String hql = "FROM QCRuleViolation WHERE instrumentId = :instrumentId AND resolutionStatus = 'UNRESOLVED' ORDER BY violationDateTime DESC";
         try {
-            Session session = entityManager.unwrap(Session.class);
-            Query<QCRuleViolation> query = session.createQuery(hql, QCRuleViolation.class);
-            query.setParameter("instrumentId", instrumentId);
-            return query.list();
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<QCRuleViolation> cq = cb.createQuery(QCRuleViolation.class);
+            Root<QCRuleViolation> root = cq.from(QCRuleViolation.class);
+            cq.where(cb.equal(root.get("instrumentId"), instrumentId),
+                    cb.equal(root.get("resolutionStatus"), "UNRESOLVED"));
+            cq.orderBy(cb.desc(root.get("violationDateTime")));
+            return entityManager.createQuery(cq).getResultList();
         } catch (RuntimeException e) {
             throw new LIMSRuntimeException("Error retrieving unresolved QC violations by instrument", e);
         }
@@ -90,12 +98,13 @@ public class QCRuleViolationDAOImpl extends BaseDAOImpl<QCRuleViolation, String>
 
     @Override
     public List<QCRuleViolation> findByTriggeringResultId(String triggeringResultId) throws LIMSRuntimeException {
-        String hql = "FROM QCRuleViolation WHERE triggeringResultId = :triggeringResultId ORDER BY violationDateTime DESC";
         try {
-            Session session = entityManager.unwrap(Session.class);
-            Query<QCRuleViolation> query = session.createQuery(hql, QCRuleViolation.class);
-            query.setParameter("triggeringResultId", triggeringResultId);
-            return query.list();
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<QCRuleViolation> cq = cb.createQuery(QCRuleViolation.class);
+            Root<QCRuleViolation> root = cq.from(QCRuleViolation.class);
+            cq.where(cb.equal(root.get("triggeringResultId"), triggeringResultId));
+            cq.orderBy(cb.desc(root.get("violationDateTime")));
+            return entityManager.createQuery(cq).getResultList();
         } catch (RuntimeException e) {
             throw new LIMSRuntimeException("Error retrieving QC violations by triggering result ID", e);
         }

@@ -20,6 +20,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.openelisglobal.qc.dao.QCAlertDAO;
 import org.openelisglobal.qc.valueholder.QCAlert;
 import org.openelisglobal.qc.valueholder.QCRuleViolation;
+import org.openelisglobal.systemuser.service.SystemUserService;
+import org.openelisglobal.systemuser.valueholder.SystemUser;
 
 /**
  * Unit tests for QCAlertService (T100)
@@ -32,6 +34,9 @@ public class QCAlertServiceTest {
     @Mock
     private QCAlertDAO alertDAO;
 
+    @Mock
+    private SystemUserService systemUserService;
+
     @InjectMocks
     private QCAlertServiceImpl alertService;
 
@@ -40,7 +45,6 @@ public class QCAlertServiceTest {
 
     @Before
     public void setUp() {
-        // Create a REJECTION severity violation
         rejectionViolation = new QCRuleViolation();
         rejectionViolation.setId("V1");
         rejectionViolation.setRuleCode("1₃ₛ");
@@ -50,7 +54,6 @@ public class QCAlertServiceTest {
         rejectionViolation.setViolationDateTime(Timestamp.from(Instant.now()));
         rejectionViolation.setTriggeringResultId("R1");
 
-        // Create a WARNING severity violation
         warningViolation = new QCRuleViolation();
         warningViolation.setId("V2");
         warningViolation.setRuleCode("1₂ₛ");
@@ -61,97 +64,123 @@ public class QCAlertServiceTest {
         warningViolation.setTriggeringResultId("R2");
     }
 
-    // ===================== createAlertForViolation tests =====================
+    private SystemUser createActiveUser(String id) {
+        SystemUser user = new SystemUser();
+        user.setId(id);
+        user.setIsActive("Y");
+        return user;
+    }
+
+    private SystemUser createInactiveUser(String id) {
+        SystemUser user = new SystemUser();
+        user.setId(id);
+        user.setIsActive("N");
+        return user;
+    }
+
+    // ===================== createAlertsForViolation tests =====================
 
     @Test
-    public void testCreateAlertForViolation_Rejection_ShouldCreateImmediateAlert() {
-        // REJECTION severity skips batching check entirely, no need to stub
-        // findByViolation
+    public void createAlertsForViolation_rejection_createsOneAlertPerActiveUser() {
+        SystemUser user1 = createActiveUser("10");
+        SystemUser user2 = createActiveUser("20");
+        SystemUser inactive = createInactiveUser("30");
+        when(systemUserService.getAllSystemUsers()).thenReturn(Arrays.asList(user1, user2, inactive));
 
-        QCAlert alert = alertService.createAlertForViolation(rejectionViolation);
+        List<QCAlert> alerts = alertService.createAlertsForViolation(rejectionViolation);
 
-        assertNotNull("Alert should be created", alert);
-        assertEquals("V1", alert.getViolationId());
-        assertEquals("QC_RULE_VIOLATION", alert.getAlertType());
-        assertFalse(alert.getReadStatus());
-        assertTrue(alert.getMessageSubject().contains("URGENT"));
-        assertTrue(alert.getMessageBody().contains("IMMEDIATE ACTION"));
-
-        verify(alertDAO).insert(any(QCAlert.class));
+        assertEquals(2, alerts.size());
+        assertEquals("V1", alerts.get(0).getViolationId());
+        assertEquals("V1", alerts.get(1).getViolationId());
+        assertEquals(Integer.valueOf(10), alerts.get(0).getRecipientUserId());
+        assertEquals(Integer.valueOf(20), alerts.get(1).getRecipientUserId());
+        assertFalse(alerts.get(0).getReadStatus());
+        assertTrue(alerts.get(0).getMessageSubject().contains("URGENT"));
+        verify(alertDAO, times(2)).insert(any(QCAlert.class));
     }
 
     @Test
-    public void testCreateAlertForViolation_Warning_ShouldCreateAlert() {
+    public void createAlertsForViolation_warning_createsAlertsWhenNotBatched() {
         when(alertDAO.findByViolation("V2")).thenReturn(Collections.emptyList());
+        SystemUser user = createActiveUser("10");
+        when(systemUserService.getAllSystemUsers()).thenReturn(Arrays.asList(user));
 
-        QCAlert alert = alertService.createAlertForViolation(warningViolation);
+        List<QCAlert> alerts = alertService.createAlertsForViolation(warningViolation);
 
-        assertNotNull("Alert should be created", alert);
-        assertEquals("V2", alert.getViolationId());
-        assertFalse(alert.getMessageSubject().contains("URGENT"));
-        assertTrue(alert.getMessageSubject().contains("Warning"));
-
+        assertEquals(1, alerts.size());
+        assertEquals("V2", alerts.get(0).getViolationId());
+        assertFalse(alerts.get(0).getMessageSubject().contains("URGENT"));
+        assertTrue(alerts.get(0).getMessageSubject().contains("Warning"));
         verify(alertDAO).insert(any(QCAlert.class));
     }
 
     @Test
-    public void testCreateAlertForViolation_NullViolation_ShouldReturnNull() {
-        QCAlert alert = alertService.createAlertForViolation(null);
+    public void createAlertsForViolation_nullViolation_returnsEmptyList() {
+        List<QCAlert> alerts = alertService.createAlertsForViolation(null);
 
-        assertNull("Should return null for null violation", alert);
+        assertTrue(alerts.isEmpty());
         verify(alertDAO, never()).insert(any(QCAlert.class));
     }
 
     @Test
-    public void testCreateAlertForViolation_RejectionNeverBatched_EvenWithRecentAlerts() {
-        // REJECTION severity skips batching check entirely - no need to set up recent
-        // alerts
-        // The service doesn't even call findByViolation for REJECTION
+    public void createAlertsForViolation_rejectionNeverBatched() {
+        SystemUser user = createActiveUser("10");
+        when(systemUserService.getAllSystemUsers()).thenReturn(Arrays.asList(user));
 
-        QCAlert alert = alertService.createAlertForViolation(rejectionViolation);
+        List<QCAlert> alerts = alertService.createAlertsForViolation(rejectionViolation);
 
-        assertNotNull("REJECTION alerts should never be batched", alert);
+        assertFalse("REJECTION alerts should never be batched", alerts.isEmpty());
         verify(alertDAO).insert(any(QCAlert.class));
-        // Verify that findByViolation was never called for REJECTION
         verify(alertDAO, never()).findByViolation(anyString());
     }
 
     @Test
-    public void testCreateAlertForViolation_Warning_ShouldBeBatchedIfRecentAlert() {
-        // Recent alert within 15 minutes
+    public void createAlertsForViolation_warningBatchedIfRecentAlert() {
         QCAlert recentAlert = new QCAlert();
         recentAlert.setSentDateTime(Timestamp.from(Instant.now().minus(5, ChronoUnit.MINUTES)));
-
         when(alertDAO.findByViolation("V2")).thenReturn(Arrays.asList(recentAlert));
 
-        QCAlert alert = alertService.createAlertForViolation(warningViolation);
+        List<QCAlert> alerts = alertService.createAlertsForViolation(warningViolation);
 
-        assertNull("Warning alert should be batched if recent alert exists", alert);
+        assertTrue("Warning alert should be batched if recent alert exists", alerts.isEmpty());
         verify(alertDAO, never()).insert(any(QCAlert.class));
     }
 
     @Test
-    public void testCreateAlertForViolation_Warning_ShouldNotBeBatchedIfOldAlert() {
-        // Old alert outside 15 minute window
+    public void createAlertsForViolation_warningNotBatchedIfOldAlert() {
         QCAlert oldAlert = new QCAlert();
         oldAlert.setSentDateTime(Timestamp.from(Instant.now().minus(20, ChronoUnit.MINUTES)));
-
         when(alertDAO.findByViolation("V2")).thenReturn(Arrays.asList(oldAlert));
+        SystemUser user = createActiveUser("10");
+        when(systemUserService.getAllSystemUsers()).thenReturn(Arrays.asList(user));
 
-        QCAlert alert = alertService.createAlertForViolation(warningViolation);
+        List<QCAlert> alerts = alertService.createAlertsForViolation(warningViolation);
 
-        assertNotNull("Warning alert should be created if no recent alerts", alert);
+        assertFalse("Warning alert should be created if no recent alerts", alerts.isEmpty());
         verify(alertDAO).insert(any(QCAlert.class));
     }
 
     @Test
-    public void testCreateAlertForViolation_ShouldIncludeResolutionNotes() {
+    public void createAlertsForViolation_includesResolutionNotes() {
         rejectionViolation.setResolutionNotes("Detection: Result exceeds 3SD (z-score: 3.5)");
-        // REJECTION severity skips batching check, no need to stub findByViolation
+        SystemUser user = createActiveUser("10");
+        when(systemUserService.getAllSystemUsers()).thenReturn(Arrays.asList(user));
 
-        QCAlert alert = alertService.createAlertForViolation(rejectionViolation);
+        List<QCAlert> alerts = alertService.createAlertsForViolation(rejectionViolation);
 
-        assertTrue(alert.getMessageBody().contains("Result exceeds 3SD"));
+        assertEquals(1, alerts.size());
+        assertTrue(alerts.get(0).getMessageBody().contains("Result exceeds 3SD"));
+    }
+
+    @Test
+    public void createAlertsForViolation_noActiveUsers_returnsEmptyList() {
+        SystemUser inactive = createInactiveUser("10");
+        when(systemUserService.getAllSystemUsers()).thenReturn(Arrays.asList(inactive));
+
+        List<QCAlert> alerts = alertService.createAlertsForViolation(rejectionViolation);
+
+        assertTrue(alerts.isEmpty());
+        verify(alertDAO, never()).insert(any(QCAlert.class));
     }
 
     // ===================== getAlertsForUser tests =====================
@@ -287,7 +316,6 @@ public class QCAlertServiceTest {
 
     @Test
     public void testShouldBatchAlert_RejectionSeverity_ShouldNeverBatch() {
-        // Even with recent alerts, REJECTION should not be batched
         assertFalse(alertService.shouldBatchAlert(rejectionViolation));
     }
 
