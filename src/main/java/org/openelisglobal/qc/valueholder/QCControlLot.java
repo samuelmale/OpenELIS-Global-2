@@ -59,13 +59,13 @@ public class QCControlLot extends BaseObject<String> {
     @Column(name = "manufacturer_std_dev", precision = 15, scale = 5)
     private Double manufacturerStdDev;
 
-    @NotNull
-    @Column(name = "activation_date", nullable = false)
+    @Column(name = "activation_date")
     private Timestamp activationDate;
 
     @Column(name = "expiration_date")
     private Timestamp expirationDate;
 
+    // TODO: Use an Enum instead of a hardcoded string
     @NotNull
     @Column(name = "status", nullable = false, length = 50)
     private String status = "ESTABLISHMENT";

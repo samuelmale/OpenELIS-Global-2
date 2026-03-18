@@ -19,6 +19,8 @@
   <include file="liquibase/3.4.x.x/base.xml" />
   <include file="liquibase/3.4.14.x/base.xml" />
   <include file="liquibase/3.5.x.x/base.xml" />
+  <!-- Analyzer Configuration Feature (004-astm-analyzer-mapping) -->
+  <include file="liquibase/analyzer/base.xml" />
   <!-- QC (Quality Control) Westgard Rules Feature -->
   <include file="liquibase/qc/001-create-qc-tables.xml" />
   <include file="liquibase/qc/002-create-westgard-rule-config.xml" />

@@ -42,9 +42,7 @@
             <column name="initial_runs_count" type="INT" defaultValue="20"/>
             <column name="manufacturer_mean" type="NUMERIC(15,5)"/>
             <column name="manufacturer_std_dev" type="NUMERIC(15,5)"/>
-            <column name="activation_date" type="TIMESTAMP">
-                <constraints nullable="false"/>
-            </column>
+            <column name="activation_date" type="TIMESTAMP"/>
             <column name="expiration_date" type="TIMESTAMP"/>
             <column name="status" type="VARCHAR(50)" defaultValue="ESTABLISHMENT">
                 <constraints nullable="false"/>

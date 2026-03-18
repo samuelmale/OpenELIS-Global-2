@@ -12,6 +12,9 @@
             <tableExists tableName="analyzer_field"/>
             <tableExists tableName="analyzer_field_mapping"/>
             <tableExists tableName="analyzer_error"/>
+            <not>
+                <indexExists indexName="idx_analyzer_field_analyzer_id"/>
+            </not>
         </preConditions>
         <comment>Creating performance indexes for analyzer tables</comment>
 
