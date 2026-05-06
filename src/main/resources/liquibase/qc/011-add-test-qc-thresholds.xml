@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- QC acceptance threshold fields on Test entity (OGC-554 FR-01) -->
+    <changeSet id="qc-011-add-test-qc-thresholds" author="openelisglobal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="test" columnName="qc_blank_threshold"/>
+            </not>
+        </preConditions>
+        <comment>Add QC acceptance threshold columns to test table (OGC-554)</comment>
+        <addColumn tableName="test">
+            <column name="qc_blank_threshold" type="NUMERIC"/>
+            <column name="qc_rpd_threshold" type="NUMERIC" defaultValueNumeric="20"/>
+            <column name="qc_recovery_window_pct" type="NUMERIC" defaultValueNumeric="20"/>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="test" columnName="qc_blank_threshold"/>
+            <dropColumn tableName="test" columnName="qc_rpd_threshold"/>
+            <dropColumn tableName="test" columnName="qc_recovery_window_pct"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

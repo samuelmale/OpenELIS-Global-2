@@ -130,6 +130,13 @@
 
         <property name="antimicrobialResistance"
             type="java.lang.Boolean" column="antimicrobial_resistance" />
+
+        <property name="qcBlankThreshold" type="java.lang.Double"
+            column="qc_blank_threshold" />
+        <property name="qcRpdThreshold" type="java.lang.Double"
+            column="qc_rpd_threshold" />
+        <property name="qcRecoveryWindowPct" type="java.lang.Double"
+            column="qc_recovery_window_pct" />
     </class>
     <!-- <query name="test.getNext"> -->
     <!-- from Test t order by t.testSection.testSectionName, t.testName -->

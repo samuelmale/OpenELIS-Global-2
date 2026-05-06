@@ -121,6 +121,12 @@ public class Test extends EnumValueItemImpl {
 
     private Boolean antimicrobialResistance;
 
+    private Double qcBlankThreshold;
+
+    private Double qcRpdThreshold;
+
+    private Double qcRecoveryWindowPct;
+
     @Override
     public String getSortOrder() {
         return sortOrder;
@@ -537,6 +543,30 @@ public class Test extends EnumValueItemImpl {
 
     public Boolean getAntimicrobialResistance() {
         return antimicrobialResistance;
+    }
+
+    public Double getQcBlankThreshold() {
+        return qcBlankThreshold;
+    }
+
+    public void setQcBlankThreshold(Double qcBlankThreshold) {
+        this.qcBlankThreshold = qcBlankThreshold;
+    }
+
+    public Double getQcRpdThreshold() {
+        return qcRpdThreshold;
+    }
+
+    public void setQcRpdThreshold(Double qcRpdThreshold) {
+        this.qcRpdThreshold = qcRpdThreshold;
+    }
+
+    public Double getQcRecoveryWindowPct() {
+        return qcRecoveryWindowPct;
+    }
+
+    public void setQcRecoveryWindowPct(Double qcRecoveryWindowPct) {
+        this.qcRecoveryWindowPct = qcRecoveryWindowPct;
     }
 
     @Override
