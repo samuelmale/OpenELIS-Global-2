@@ -76,6 +76,16 @@ public class EQAParticipantFollowupServiceImpl extends BaseObjectServiceImpl<EQA
                 // later failures would be dropped silently.
                 existing.setParticipantResultSummaryJson(
                         mergeSummary(existing.getParticipantResultSummaryJson(), rows, source));
+                // A row that was already escalated or dismissed has left the queue,
+                // so merging into it as-is would hide this failure from the very
+                // supervisor who has to triage it. Reopen instead: the NCE raised by
+                // an earlier escalation keeps its trigger source and its competency
+                // events, and escalating again returns that same NCE.
+                if (existing.getFollowupStatus() == EQAFollowupStatus.ESCALATED
+                        || existing.getFollowupStatus() == EQAFollowupStatus.RESOLVED) {
+                    existing.setFollowupStatus(EQAFollowupStatus.NOTIFIED);
+                    existing.setNotifiedAt(DateUtil.getNowAsTimestamp());
+                }
                 existing.setSysUserId(sysUserId);
                 return followupDAO.update(existing);
             }

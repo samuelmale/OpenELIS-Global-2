@@ -242,6 +242,30 @@ public class EQAScoreTriageIntegrationTest extends EQASpineTestBase {
     }
 
     @Test
+    public void aFailureAfterEscalationReopensTheRowInsteadOfVanishing() {
+        Scored first = score(EQASchemeType.IN_HOUSE, EQAPerformanceStatus.UNACCEPTABLE, null, "Negative");
+        Long followupId = Long.valueOf(String.valueOf(followupService.getQueueRows().get(0).get("id")));
+        eqaScoreNceService.escalateFollowup(followupId, USER);
+        assertEquals("escalation empties the queue", 0, followupService.getQueueRows().size());
+
+        // A second analyte fails in the same cycle after the supervisor escalated.
+        EQACycle cycle = readBack(first.cycleId);
+        EQARound round = eqaRoundDAO.get(first.roundId).orElseThrow(AssertionError::new);
+        Long laterId = insertParticipantResult(cycle, round, ENROLLMENT, SECOND_ANALYTE, EQASubmissionStatus.SUBMITTED,
+                "Positive");
+        participantResultService.recordScore(laterId, EQAPerformanceStatus.UNACCEPTABLE, null, USER);
+
+        List<Map<String, Object>> queue = followupService.getQueueRows();
+        assertEquals("the later failure puts the row back in front of a supervisor", 1, queue.size());
+        assertEquals(followupId.intValue(), ((Number) queue.get(0).get("id")).intValue());
+        assertEquals("NOTIFIED", queue.get(0).get("followupStatus"));
+        List<Map<String, Object>> rows = queueResults(queue.get(0));
+        assertEquals("and it carries both failures", 2, rows.size());
+        assertEquals(laterId.intValue(), ((Number) rows.get(1).get("participantResultId")).intValue());
+        assertEquals("reopening raises no second NCE", 1, eqaNces().size());
+    }
+
+    @Test
     public void dismissRefusesAnAlreadyEscalatedRow() {
         score(EQASchemeType.INTERNATIONAL_PT, EQAPerformanceStatus.QUESTIONABLE, new BigDecimal("2.2"), "105");
         Long followupId = Long.valueOf(String.valueOf(followupService.getQueueRows().get(0).get("id")));
