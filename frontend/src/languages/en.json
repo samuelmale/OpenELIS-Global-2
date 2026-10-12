@@ -12667,5 +12667,18 @@
   "inventory.count.done": "Count recorded: {adjusted, plural, =0 {no corrections} one {# correction} other {# corrections}}, {confirmed, plural, =0 {none confirmed} one {# lot confirmed} other {# lots confirmed}}.",
   "inventory.count.lastCounted": "Counted {date}",
   "inventory.count.neverCounted": "Never counted",
-  "inventory.count.column": "Last count"
+  "inventory.count.column": "Last count",
+  "sideNav.title.managementOverview": "Management Overview",
+  "label.mgmt.title": "Management Overview",
+  "label.mgmt.subtitle": "{0} · {1} · {2} samples processed",
+  "label.dashboard.refresh": "Refresh",
+  "label.dashboard.lastUpdated": "Updated {0}m ago",
+  "label.dashboard.scope.last7days": "Last 7 days",
+  "label.dashboard.scope.last30days": "Last 30 days",
+  "label.dashboard.scope.last90days": "Last 90 days",
+  "label.dashboard.scope.quarter": "Quarter",
+  "label.dashboard.scope.yearToDate": "Year-to-date",
+  "label.dashboard.scope.year": "Year",
+  "label.mgmt.subtitle.noSiteName": "{0} · {1} samples processed",
+  "label.dashboard.scope": "Time scope"
 }
