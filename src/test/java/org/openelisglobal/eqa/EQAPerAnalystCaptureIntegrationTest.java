@@ -315,6 +315,34 @@ public class EQAPerAnalystCaptureIntegrationTest extends EQASpineTestBase {
     }
 
     @Test
+    public void theResultsPageRefusesAnAnalystOffTheSchemeRoster() throws Exception {
+        EQAProgram scheme = perAnalystScheme("Capture on");
+        eqaProgramService.setAnalysts(scheme.getId(), List.of(ADMIN_USER_ID), USER);
+        Fixture fixture = order(scheme);
+
+        mockMvc.perform(saveResult(fixture.analysisId, "EQAT19001", String.valueOf(OTHER_ANALYST)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.error").value(MessageUtil.getMessage("eqa.result.analystNotEligible")));
+
+        assertEquals(0, allResults().size());
+        assertEquals("1200", jdbc.queryForObject("SELECT value FROM clinlims.result WHERE analysis_id = ?",
+                String.class, fixture.analysisId));
+    }
+
+    @Test
+    public void theResultsPageRefusesAnAnalystIdThatNamesNoUser() throws Exception {
+        Fixture fixture = order(perAnalystScheme("Capture on"));
+
+        mockMvc.perform(saveResult(fixture.analysisId, "EQAT19001", "not-a-user"))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.error").value(MessageUtil.getMessage("eqa.result.analystNotEligible")));
+
+        assertEquals(0, allResults().size());
+        assertEquals("1200", jdbc.queryForObject("SELECT value FROM clinlims.result WHERE analysis_id = ?",
+                String.class, fixture.analysisId));
+    }
+
+    @Test
     public void theResultsPageSavesWithNoAnalystWhenTheSchemeDoesNotCaptureOne() throws Exception {
         Fixture fixture = order(insertScheme("Capture off", EQASchemeType.INTERNATIONAL_PT, "NHLS"));
 

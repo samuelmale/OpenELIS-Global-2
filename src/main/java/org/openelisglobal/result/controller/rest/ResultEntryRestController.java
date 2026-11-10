@@ -36,6 +36,7 @@ import org.openelisglobal.dataexchange.fhir.exception.FhirPersistanceException;
 import org.openelisglobal.dataexchange.fhir.exception.FhirTransformationException;
 import org.openelisglobal.dataexchange.fhir.service.FhirTransformService;
 import org.openelisglobal.eqa.service.EQACycleSubmissionService;
+import org.openelisglobal.eqa.service.EQAProgramService;
 import org.openelisglobal.eqa.service.SampleEQAService;
 import org.openelisglobal.internationalization.MessageUtil;
 import org.openelisglobal.referral.action.beanitems.ReferralItem;
@@ -155,6 +156,8 @@ public class ResultEntryRestController extends LogbookResultsBaseController {
     private SampleEQAService sampleEQAService;
     @Autowired
     private EQACycleSubmissionService cycleSubmissionService;
+    @Autowired
+    private EQAProgramService eqaProgramService;
 
     /**
      * Lab Units the user may enter results for, each carrying its domain so the
@@ -360,7 +363,13 @@ public class ResultEntryRestController extends LogbookResultsBaseController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
         }
 
-        if (isAnswered(item) && capturesAnalyst(analysis)) {
+        Optional<Long> analystScheme = analystSchemeOf(analysis);
+        if (analystScheme.isPresent() && !GenericValidator.isBlankOrNull(item.getEqaAnalystId())
+                && !eqaProgramService.isEligibleAnalyst(analystScheme.get(), item.getEqaAnalystId())) {
+            body.put("error", MessageUtil.getMessage("eqa.result.analystNotEligible"));
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(body);
+        }
+        if (isAnswered(item) && analystScheme.isPresent()) {
             if (GenericValidator.isBlankOrNull(item.getEqaAnalystId())) {
                 body.put("error", MessageUtil.getMessage("eqa.result.analystRequired"));
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(body);
@@ -585,12 +594,11 @@ public class ResultEntryRestController extends LogbookResultsBaseController {
                 || !GenericValidator.isBlankOrNull(item.getMultiSelectResultValues());
     }
 
-    private boolean capturesAnalyst(Analysis analysis) {
+    private Optional<Long> analystSchemeOf(Analysis analysis) {
         if (analysis.getSampleItem() == null || analysis.getSampleItem().getSample() == null) {
-            return false;
+            return Optional.empty();
         }
-        return sampleEQAService.findPerAnalystSchemeId(Long.valueOf(analysis.getSampleItem().getSample().getId()))
-                .isPresent();
+        return sampleEQAService.findPerAnalystSchemeId(Long.valueOf(analysis.getSampleItem().getSample().getId()));
     }
 
     // Logged, not thrown: the clinical result is already saved.
