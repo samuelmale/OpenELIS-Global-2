@@ -25,4 +25,7 @@ public interface EQAProgramService extends BaseObjectService<EQAProgram, Long> {
 
     /** Replaces the roster with exactly these system users. */
     List<EQASchemeAnalyst> setAnalysts(Long programId, List<Long> systemUserIds, String sysUserId);
+
+    /** On the roster, or any active user when the roster is empty. */
+    boolean isEligibleAnalyst(Long programId, String systemUserId);
 }

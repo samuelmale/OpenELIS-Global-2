@@ -13,6 +13,8 @@ import org.openelisglobal.eqa.valueholder.EQAProgram;
 import org.openelisglobal.eqa.valueholder.EQAProgramTest;
 import org.openelisglobal.eqa.valueholder.EQASchemeAnalyst;
 import org.openelisglobal.eqa.valueholder.EQASchemeType;
+import org.openelisglobal.systemuser.service.SystemUserService;
+import org.openelisglobal.systemuser.valueholder.SystemUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +34,9 @@ public class EQAProgramServiceImpl extends BaseObjectServiceImpl<EQAProgram, Lon
 
     @Autowired
     private EQACycleDAO eqaCycleDAO;
+
+    @Autowired
+    private SystemUserService systemUserService;
 
     public EQAProgramServiceImpl() {
         super(EQAProgram.class);
@@ -213,6 +218,23 @@ public class EQAProgramServiceImpl extends BaseObjectServiceImpl<EQAProgram, Lon
             }
         }
         return getAnalysts(programId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isEligibleAnalyst(Long programId, String systemUserId) {
+        Long userId;
+        try {
+            userId = Long.valueOf(systemUserId);
+        } catch (NumberFormatException e) {
+            return false;
+        }
+        List<EQASchemeAnalyst> roster = getAnalysts(programId);
+        if (!roster.isEmpty()) {
+            return roster.stream().anyMatch(analyst -> userId.equals(analyst.getSystemUserId()));
+        }
+        SystemUser user = systemUserService.getUserById(String.valueOf(userId));
+        return user != null && "Y".equals(user.getIsActive());
     }
 
     @Override
