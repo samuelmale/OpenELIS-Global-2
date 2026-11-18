@@ -543,7 +543,9 @@ export default function CaseAstWorkspace({
                                         )
                                       )}
                                       <br />
-                                      {t("breakpoint")}: {run.breakpointVersion}{" "}
+                                      {t("breakpoint")}:{" "}
+                                      {run.breakpointAuthority}{" "}
+                                      {run.breakpointVersion}{" "}
                                       {reading.matchedBy &&
                                         t(`match.${reading.matchedBy}`)}
                                     </>
