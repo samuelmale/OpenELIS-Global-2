@@ -6,6 +6,7 @@ import ContainerLabelButton from "./ContainerLabelButton";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { useIntl } from "react-intl";
 import MacroTextArea from "../common/textMacro/MacroTextArea";
+import { RequiredMarker, requiredProps } from "../common/RequiredMarker";
 import UserSessionDetailsContext from "../../UserSessionDetailsContext";
 import { hasRole, Roles } from "../utils/Utils";
 import {
@@ -865,7 +866,13 @@ export default function CaseAstWorkspace({
                 )}
                 <Select
                   id="ast-clinical-context"
-                  labelText={t("clinicalContext")}
+                  {...requiredProps()}
+                  labelText={
+                    <>
+                      {t("clinicalContext")}
+                      <RequiredMarker />
+                    </>
+                  }
                   helperText={t("clinicalContext.help")}
                   value={draft.clinicalContext}
                   onChange={(event) =>
@@ -907,7 +914,13 @@ export default function CaseAstWorkspace({
             {["start", "assign"].includes(draft.action) && (
               <Select
                 id="ast-panel"
-                labelText={t("panel")}
+                {...requiredProps()}
+                labelText={
+                  <>
+                    {t("panel")}
+                    <RequiredMarker />
+                  </>
+                }
                 value={draft.panelId}
                 onChange={(e) =>
                   setDraft({ ...draft, panelId: e.target.value })
@@ -1037,7 +1050,13 @@ export default function CaseAstWorkspace({
             {draft.action === "start" && (
               <Select
                 id="ast-standard"
-                labelText={t("breakpoint")}
+                {...requiredProps()}
+                labelText={
+                  <>
+                    {t("breakpoint")}
+                    <RequiredMarker />
+                  </>
+                }
                 value={draft.breakpointStandardId}
                 onChange={(e) =>
                   setDraft({ ...draft, breakpointStandardId: e.target.value })
