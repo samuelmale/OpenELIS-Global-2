@@ -372,7 +372,7 @@ export default function CaseAstWorkspace({
                     <p>
                       {t("clinicalContext")}:{" "}
                       {t(
-                        `clinicalContext.${run.clinicalContext || "unspecified"}`,
+                        `clinicalContext.${run.clinicalContext || "notStated"}`,
                       )}
                     </p>
                     <ContainerLabelButton
@@ -875,7 +875,7 @@ export default function CaseAstWorkspace({
                       <RequiredMarker />
                     </>
                   }
-                  helperText={t("clinicalContext.help")}
+                  helperText={t("clinicalContext.choiceHelp")}
                   value={draft.clinicalContext}
                   onChange={(event) =>
                     setDraft({ ...draft, clinicalContext: event.target.value })
@@ -896,7 +896,7 @@ export default function CaseAstWorkspace({
                   />
                   <SelectItem
                     value="NOT_STATED"
-                    text={t("clinicalContext.unspecified")}
+                    text={t("clinicalContext.notStated")}
                   />
                 </Select>
                 <ReagentLotPicker
