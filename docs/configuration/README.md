@@ -132,8 +132,10 @@ Reporting track concepts use the existing dictionary loader and
 own configuration domain so an unrelated dictionary catalog cannot hide it.
 `configuration/program-reporting-tracks/*.csv` assigns those configured tracks
 to existing Programs, after dictionary and questionnaire loading. Its columns
-are `programCode,reportingTrack`; the track must be an active entry in the
-`Reporting track` category. Unmatched Program codes are left alone. Imports
+are `programCode,reportingTrack` and an optional `showOnMicroCase`; a track
+must be an active entry in the `Reporting track` category. A blank track leaves
+the Program's track, and `showOnMicroCase` takes `true`, `false` or blank (left
+as it is). Unmatched Program codes are left alone. Imports
 follow the normal configuration checksum and reload behavior. Program
 administrators can also select the track in Program management.
 
